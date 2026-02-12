@@ -78,6 +78,7 @@ function App() {
     // resultados
     const [calcResult, setCalcResult] = useState(null);
     const [simResult, setSimResult] = useState(null);
+    const [connectionError, setConnectionError] = useState(null);
 
     // modifiers state (controlled inputs)
     const [modifiers, setModifiers] = useState({
@@ -120,8 +121,12 @@ function App() {
                 if (data.contents && data.contents.length > 0) {
                     loadLevels(data.contents[0].content_id);
                 }
+                setConnectionError(null);
             })
-            .catch(err => console.error("Erro ao carregar conteúdos:", err));
+            .catch(err => {
+                console.error("Erro ao carregar conteúdos:", err);
+                setConnectionError("Erro de conexão: Verifique se o backend está rodando.");
+            });
     }, []);
 
     // Carrega níveis quando o conteúdo muda
@@ -205,9 +210,18 @@ function App() {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload)
         })
-            .then(res => res.json())
-            .then(data => setAllDropsData(data))
-            .catch(err => console.error("Erro ao calcular drops:", err));
+            .then(res => {
+                if (!res.ok) throw new Error("API Indisponível (404/500)");
+                return res.json();
+            })
+            .then(data => {
+                setAllDropsData(data);
+                setConnectionError(null);
+            })
+            .catch(err => {
+                console.error("Erro ao calcular drops:", err);
+                setConnectionError("A funcionalidade padrão falhou no servidor atual.");
+            });
     };
 
     // Função para carregar drops de monster table
@@ -283,9 +297,18 @@ function App() {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload)
         })
-            .then(res => res.json())
-            .then(data => setMonsterTableData(data))
-            .catch(err => console.error("Erro ao calcular monster table:", err));
+            .then(res => {
+                if (!res.ok) throw new Error("Conteúdo não suportado neste servidor");
+                return res.json();
+            })
+            .then(data => {
+                setMonsterTableData(data);
+                setConnectionError(null);
+            })
+            .catch(err => {
+                console.error("Erro ao calcular monster table:", err);
+                setConnectionError("A Tabela de Monstros não está disponível neste servidor (Requer Backend Local).");
+            });
     };
 
     // Recalcula quando qualquer dependencia muda (level, consumiveis, modificadores)
@@ -482,6 +505,19 @@ function App() {
                         <p style={{ fontStyle: "italic", fontSize: "12px" }}>Modo Tabela de Monstros Ativo</p>
                     ) : (
                         <p style={{ fontStyle: "italic", fontSize: "12px" }}>Modo Cálculo Normal (Drops Gerais)</p>
+                    )}
+                    {connectionError && (
+                        <div style={{
+                            marginTop: "10px",
+                            padding: "8px",
+                            background: "rgba(239, 68, 68, 0.1)",
+                            border: "1px solid var(--danger)",
+                            borderRadius: "4px",
+                            color: "var(--danger)",
+                            fontSize: "12px"
+                        }}>
+                            <strong>Atenção:</strong> {connectionError}
+                        </div>
                     )}
                 </>
             }

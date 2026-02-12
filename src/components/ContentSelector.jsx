@@ -24,6 +24,9 @@ const getContentIcon = (content) => {
     if (name.includes('glast') || name.includes('extreme')) {
         return '/icons/glast_heim.png';
     }
+    if (name.includes('dominio') || id.includes('dominio')) {
+        return '/icons/dominio.png';
+    }
 
     // Default emoji for unmapped contents (will be replaced when 7th icon is generated)
     return null; // Will show emoji fallback

@@ -547,7 +547,7 @@ function App() {
             {/* Se o modo tabela não estiver ativo, ou seja, modo "normal", mostra os drops calculados naquela lista antiga */}
             {!monsterTableData && allDropsData && (
                 <div className="card">
-                    <h3>Drops (Cálculo Geral para o Nível)</h3>
+                    <h3>Drops</h3>
                     <p>Bônus Geral: {allDropsData.B_general_percent}% | Bônus Final: {allDropsData.B_final_percent}%</p>
                     <table style={{ width: "100%", borderCollapse: "collapse", marginTop: "10px" }}>
                         <thead>

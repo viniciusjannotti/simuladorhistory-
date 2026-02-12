@@ -219,8 +219,8 @@ function App() {
                 setConnectionError(null);
             })
             .catch(err => {
-                console.error("Erro ao calcular drops:", err);
-                setConnectionError("A funcionalidade padrão falhou no servidor atual.");
+                // Silencioso no console, erro mostrado na UI
+                setConnectionError("Modo Normal indisponível no servidor remoto. Use o Backend Local.");
             });
     };
 
@@ -306,8 +306,8 @@ function App() {
                 setConnectionError(null);
             })
             .catch(err => {
-                console.error("Erro ao calcular monster table:", err);
-                setConnectionError("A Tabela de Monstros não está disponível neste servidor (Requer Backend Local).");
+                // Silencioso no console
+                setConnectionError("A Tabela de Monstros requer o Backend Local rodando.");
             });
     };
 
@@ -509,14 +509,22 @@ function App() {
                     {connectionError && (
                         <div style={{
                             marginTop: "10px",
-                            padding: "8px",
-                            background: "rgba(239, 68, 68, 0.1)",
-                            border: "1px solid var(--danger)",
-                            borderRadius: "4px",
-                            color: "var(--danger)",
-                            fontSize: "12px"
+                            padding: "12px",
+                            background: "rgba(239, 68, 68, 0.15)",
+                            border: "1px solid #ef4444",
+                            borderRadius: "8px",
+                            color: "#fca5a5",
+                            fontSize: "12px",
+                            lineHeight: "1.4"
                         }}>
-                            <strong>Atenção:</strong> {connectionError}
+                            <strong style={{ color: "#ef4444", display: "block", marginBottom: "4px" }}>⚠️ BACKEND DESLIGADO</strong>
+                            {connectionError}
+                            <hr style={{ margin: "8px 0", borderColor: "rgba(239, 68, 68, 0.2)" }} />
+                            <div style={{ fontSize: "11px", color: "#9ca3af" }}>
+                                1. Instale o Python (winget)<br />
+                                2. `cd simulador-backend`<br />
+                                3. `python -m uvicorn main:app --reload`
+                            </div>
                         </div>
                     )}
                 </>

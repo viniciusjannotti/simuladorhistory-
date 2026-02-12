@@ -3,6 +3,7 @@ import Layout from './components/Layout';
 import MonsterTable from './components/MonsterTable';
 import CalcTable from './components/CalcTable';
 import SimTable from './components/SimTable';
+import DonationCard from './components/DonationCard';
 
 const API_BASE = import.meta.env.VITE_API_BASE || 'https://simulador-backend-x3u3.onrender.com';
 
@@ -27,7 +28,7 @@ function App() {
     const PK_PRESETS = { "0": 0, "1": 0 };
     const MEMBER_PRESETS = { "0": 0, "1": 50 };
     const PET_ACCESSORY_PRESETS = { "Nenhum": 0, "+0": 1, "+1": 2, "+2": 3, "+3": 4, "+4": 5, "+5": 6, "+6": 7, "+7": 8, "+8": 9, "+9": 10, "+10": 11, "+11": 12, "+12": 13, "+13": 14, "+14": 15, "+15": 16, "+16": 17, "+17": 18, "+18": 19, "+19": 20, "+20": 21 };
-    const PET_ACCESSORYP_PRESETS = { "Nenhum": 0, "+0": 1, "+5": 2, "+9": 3, "+13": 4, "+15": 5 };
+    const PET_ACCESSORYP_PRESETS = { "Nenhum": 0, "+1": 1, "+5": 2, "+9": 3, "+13": 4, "+15": 5 };
     const FENDA_QUEST_PRESETS = { "Nenhuma": 0, "Savage": 3, "Infernal": 4, "Pesadelo": 8, "Ultimate": 12 };
     const BIO_REPUTATION_PRESETS = { "0 Bolinhas": 0, "1 Bolinha": 2, "2 Bolinhas": 4, "3 Bolinhas": 6, "4 Bolinhas": 8, "5 Bolinhas": 10 };
     const CAS_REPUTATION_PRESETS = { "Nenhum": 0, "Rep <20": 1, "Rep >=20": 2 };
@@ -40,32 +41,12 @@ function App() {
     const RUNAS_BLACK_PRESETS = { "Nenhum": 0, "+5": 1, "+10": 2, "+15": 3 };
 
     const REBORNC_PRESETS = { "Nenhum": 0, "Feito": 2 };
-    const SEA_REPUTATION_PRESETS = { "Nenhum": 0, "1": 1, "2": 2, "3": 3, "4": 4, "5": 5 };
+    const SEA_REPUTATION_PRESETS = { "0 Bolinhas": 0, "1 Bolinha": 1, "2 Bolinhas": 2, "3 Bolinhas": 3, "4 Bolinhas": 4, "5 Bolinhas": 5 };
     const TEMP_PRESETS = { "Nenhum": 0, "5 Feitos": 2, "10 Feitos": 4, "14 Feitos": 6, "18 Feitos": 8 };
 
-    // mapeamentos para transformar maestrias e Reborn Kafra em percentuais (enviados em final_mods)
-    const ADV_MASTER_MAP = {
-        none: 0,
-        adv_1: 1,
-        adv_2: 3,
-        adv_3: 5,
-        adv_4: 8
-    };
-    const BIRTH_MASTER_MAP = {
-        none: 0,
-        birth_1: 1,
-        birth_2: 2,
-        birth_3: 3,
-        birth_4: 5
-    };
-    const REBORN_KAFRA_MAP = {
-        none: 0,
-        reborn_1: 1,
-        reborn_2: 2,
-        reborn_3: 3,
-        reborn_4: 5,
-        reborn_5: 8
-    };
+    const ADV_MASTER_MAP = { none: 0, adv_1: 1, adv_2: 3, adv_3: 5, adv_4: 8 };
+    const BIRTH_MASTER_MAP = { none: 0, birth_1: 1, birth_2: 2, birth_3: 3, birth_4: 5 };
+    const REBORN_KAFRA_MAP = { none: 0, reborn_1: 1, reborn_2: 2, reborn_3: 3, reborn_4: 5, reborn_5: 8 };
 
     // consumíveis iniciais (checkbox state)
     const [consumables, setConsumables] = useState({});
@@ -97,6 +78,37 @@ function App() {
     // resultados
     const [calcResult, setCalcResult] = useState(null);
     const [simResult, setSimResult] = useState(null);
+
+    // modifiers state (controlled inputs)
+    const [modifiers, setModifiers] = useState({
+        ratePreset: "1x",
+        vipPreset: "Nenhum",
+        petPreset: "Nenhum",
+        pkPreset: "0",
+        memberPreset: "0",
+        bioReputationPreset: "0 Bolinhas",
+        cheffeniaReputationPreset: "0 Bolinhas",
+        sealedReputationPreset: "Nenhum",
+        dominioReputationPreset: "0 Bolinhas",
+        domainCollectPreset: "Nenhum",
+        guildRankingPreset: "Nenhum",
+        categRankingPreset: "Nenhum",
+        trialRankingPreset: "Nenhum",
+        runasPreset: "Nenhum",
+        runasBlackFridayPreset: "Nenhum",
+        rebornCPreset: "Nenhum",
+        temporadaPreset: "Nenhum",
+        // final mods
+        petAccessoryPreset: "Nenhum",
+        petAccessoryPPreset: "Nenhum",
+        questPreset: "Nenhuma",
+        casReputationPreset: "Nenhum"
+    });
+
+    const handleModifierChange = (e) => {
+        const { id, value } = e.target;
+        setModifiers(prev => ({ ...prev, [id]: value }));
+    };
 
     // Carrega conteúdos ao montar o componente
     useEffect(() => {
@@ -131,27 +143,27 @@ function App() {
     const recalculateDrops = () => {
         if (!selectedContent || !selectedLevel) return;
 
-        const rateBonus = RATE_PRESETS[document.getElementById("ratePreset").value] || 0;
-        const vipBonus = VIP_PRESETS[document.getElementById("vipPreset").value] || 0;
-        const petBonus = PET_PRESETS[document.getElementById("petPreset").value] || 0;
-        const pkBonus = PK_PRESETS[document.getElementById("pkPreset").value] || 0;
-        const memberBonus = MEMBER_PRESETS[document.getElementById("memberPreset").value] || 0;
-        const accBonus = PET_ACCESSORY_PRESETS[document.getElementById("petAccessoryPreset").value] || 0;
-        const accBonusP = PET_ACCESSORYP_PRESETS[document.getElementById("petAccessoryPPreset").value] || 0;
-        const questBonus = FENDA_QUEST_PRESETS[document.getElementById("questPreset").value] || 0;
-        const bioBonus = BIO_REPUTATION_PRESETS[document.getElementById("bioReputationPreset").value] || 0;
-        const chefBonus = BIO_REPUTATION_PRESETS[document.getElementById("cheffeniaReputationPreset").value] || 0;
-        const casBonus = CAS_REPUTATION_PRESETS[document.getElementById("casReputationPreset").value] || 0;
-        const dominioBonus = DOMINIO_REPUTATION_PRESETS[document.getElementById("dominioReputationPreset").value] || 0;
-        const domainBonus = DOMINIO_COLLECT_PRESETS[document.getElementById("domainCollectPreset").value] || 0;
-        const guildBonus = GUILD_RANKING_PRESETS[document.getElementById("guildRankingPreset").value] || 0;
-        const categBonus = CATEG_RANKING_PRESETS[document.getElementById("categRankingPreset").value] || 0;
-        const trialBonus = TRIAL_RANKING_PRESETS[document.getElementById("trialRankingPreset").value] || 0;
-        const runasBonus = RUNAS_PRESETS[document.getElementById("runasPreset").value] || 0;
-        const runasblackBonus = RUNAS_BLACK_PRESETS[document.getElementById("runasBlackFridayPreset").value] || 0;
-        const rebornCBonus = REBORNC_PRESETS[document.getElementById("rebornCPreset").value] || 0;
-        const sealedBonus = SEA_REPUTATION_PRESETS[document.getElementById("sealedReputationPreset").value] || 0;
-        const tempBonus = TEMP_PRESETS[document.getElementById("temporadaPreset").value] || 0;
+        const rateBonus = RATE_PRESETS[modifiers.ratePreset] || 0;
+        const vipBonus = VIP_PRESETS[modifiers.vipPreset] || 0;
+        const petBonus = PET_PRESETS[modifiers.petPreset] || 0;
+        const pkBonus = PK_PRESETS[modifiers.pkPreset] || 0;
+        const memberBonus = MEMBER_PRESETS[modifiers.memberPreset] || 0;
+        const accBonus = PET_ACCESSORY_PRESETS[modifiers.petAccessoryPreset] || 0;
+        const accBonusP = PET_ACCESSORYP_PRESETS[modifiers.petAccessoryPPreset] || 0;
+        const questBonus = FENDA_QUEST_PRESETS[modifiers.questPreset] || 0;
+        const bioBonus = BIO_REPUTATION_PRESETS[modifiers.bioReputationPreset] || 0;
+        const chefBonus = BIO_REPUTATION_PRESETS[modifiers.cheffeniaReputationPreset] || 0;
+        const casBonus = CAS_REPUTATION_PRESETS[modifiers.casReputationPreset] || 0;
+        const dominioBonus = DOMINIO_REPUTATION_PRESETS[modifiers.dominioReputationPreset] || 0;
+        const domainBonus = DOMINIO_COLLECT_PRESETS[modifiers.domainCollectPreset] || 0;
+        const guildBonus = GUILD_RANKING_PRESETS[modifiers.guildRankingPreset] || 0;
+        const categBonus = CATEG_RANKING_PRESETS[modifiers.categRankingPreset] || 0;
+        const trialBonus = TRIAL_RANKING_PRESETS[modifiers.trialRankingPreset] || 0;
+        const runasBonus = RUNAS_PRESETS[modifiers.runasPreset] || 0;
+        const runasblackBonus = RUNAS_BLACK_PRESETS[modifiers.runasBlackFridayPreset] || 0;
+        const rebornCBonus = REBORNC_PRESETS[modifiers.rebornCPreset] || 0;
+        const sealedBonus = SEA_REPUTATION_PRESETS[modifiers.sealedReputationPreset] || 0;
+        const tempBonus = TEMP_PRESETS[modifiers.temporadaPreset] || 0;
 
         const payload = {
             content_id: selectedContent,
@@ -208,27 +220,27 @@ function App() {
             return;
         }
 
-        const rateBonus = RATE_PRESETS[document.getElementById("ratePreset").value] || 0;
-        const vipBonus = VIP_PRESETS[document.getElementById("vipPreset").value] || 0;
-        const petBonus = PET_PRESETS[document.getElementById("petPreset").value] || 0;
-        const pkBonus = PK_PRESETS[document.getElementById("pkPreset").value] || 0;
-        const memberBonus = MEMBER_PRESETS[document.getElementById("memberPreset").value] || 0;
-        const accBonus = PET_ACCESSORY_PRESETS[document.getElementById("petAccessoryPreset").value] || 0;
-        const accBonusP = PET_ACCESSORYP_PRESETS[document.getElementById("petAccessoryPPreset").value] || 0;
-        const questBonus = FENDA_QUEST_PRESETS[document.getElementById("questPreset").value] || 0;
-        const bioBonus = BIO_REPUTATION_PRESETS[document.getElementById("bioReputationPreset").value] || 0;
-        const chefBonus = BIO_REPUTATION_PRESETS[document.getElementById("cheffeniaReputationPreset").value] || 0;
-        const dominioBonus = DOMINIO_REPUTATION_PRESETS[document.getElementById("dominioReputationPreset").value] || 0;
-        const casBonus = CAS_REPUTATION_PRESETS[document.getElementById("casReputationPreset").value] || 0;
-        const domainBonus = DOMINIO_COLLECT_PRESETS[document.getElementById("domainCollectPreset").value] || 0;
-        const guildBonus = GUILD_RANKING_PRESETS[document.getElementById("guildRankingPreset").value] || 0;
-        const categBonus = CATEG_RANKING_PRESETS[document.getElementById("categRankingPreset").value] || 0;
-        const trialBonus = TRIAL_RANKING_PRESETS[document.getElementById("trialRankingPreset").value] || 0;
-        const runasBonus = RUNAS_PRESETS[document.getElementById("runasPreset").value] || 0;
-        const runasblackBonus = RUNAS_BLACK_PRESETS[document.getElementById("runasBlackFridayPreset").value] || 0;
-        const rebornCBonus = REBORNC_PRESETS[document.getElementById("rebornCPreset").value] || 0;
-        const sealedBonus = SEA_REPUTATION_PRESETS[document.getElementById("sealedReputationPreset").value] || 0;
-        const tempBonus = TEMP_PRESETS[document.getElementById("temporadaPreset").value] || 0;
+        const rateBonus = RATE_PRESETS[modifiers.ratePreset] || 0;
+        const vipBonus = VIP_PRESETS[modifiers.vipPreset] || 0;
+        const petBonus = PET_PRESETS[modifiers.petPreset] || 0;
+        const pkBonus = PK_PRESETS[modifiers.pkPreset] || 0;
+        const memberBonus = MEMBER_PRESETS[modifiers.memberPreset] || 0;
+        const accBonus = PET_ACCESSORY_PRESETS[modifiers.petAccessoryPreset] || 0;
+        const accBonusP = PET_ACCESSORYP_PRESETS[modifiers.petAccessoryPPreset] || 0;
+        const questBonus = FENDA_QUEST_PRESETS[modifiers.questPreset] || 0;
+        const bioBonus = BIO_REPUTATION_PRESETS[modifiers.bioReputationPreset] || 0;
+        const chefBonus = BIO_REPUTATION_PRESETS[modifiers.cheffeniaReputationPreset] || 0;
+        const dominioBonus = DOMINIO_REPUTATION_PRESETS[modifiers.dominioReputationPreset] || 0;
+        const casBonus = CAS_REPUTATION_PRESETS[modifiers.casReputationPreset] || 0;
+        const domainBonus = DOMINIO_COLLECT_PRESETS[modifiers.domainCollectPreset] || 0;
+        const guildBonus = GUILD_RANKING_PRESETS[modifiers.guildRankingPreset] || 0;
+        const categBonus = CATEG_RANKING_PRESETS[modifiers.categRankingPreset] || 0;
+        const trialBonus = TRIAL_RANKING_PRESETS[modifiers.trialRankingPreset] || 0;
+        const runasBonus = RUNAS_PRESETS[modifiers.runasPreset] || 0;
+        const runasblackBonus = RUNAS_BLACK_PRESETS[modifiers.runasBlackFridayPreset] || 0;
+        const rebornCBonus = REBORNC_PRESETS[modifiers.rebornCPreset] || 0;
+        const sealedBonus = SEA_REPUTATION_PRESETS[modifiers.sealedReputationPreset] || 0;
+        const tempBonus = TEMP_PRESETS[modifiers.temporadaPreset] || 0;
 
         const payload = {
             content_id: selectedContent,
@@ -276,7 +288,7 @@ function App() {
             .catch(err => console.error("Erro ao calcular monster table:", err));
     };
 
-    // Recalcula quando level muda
+    // Recalcula quando qualquer dependencia muda (level, consumiveis, modificadores)
     useEffect(() => {
         if (!selectedContent || !selectedLevel) return;
 
@@ -292,7 +304,7 @@ function App() {
             setMonsterTableData(null);
             recalculateDrops();
         }
-    }, [selectedLevel, selectedContent, consumables, advMastery, birthMastery, rebornMastery]);
+    }, [selectedLevel, selectedContent, consumables, modifiers, advMastery, birthMastery, rebornMastery]);
 
     function handleConsumableChange(key) {
         setConsumables(prev => {
@@ -303,27 +315,27 @@ function App() {
     }
 
     async function handleCalc() {
-        const rateBonus = RATE_PRESETS[document.getElementById("ratePreset").value] || 0;
-        const vipBonus = VIP_PRESETS[document.getElementById("vipPreset").value] || 0;
-        const petBonus = PET_PRESETS[document.getElementById("petPreset").value] || 0;
-        const pkBonus = PK_PRESETS[document.getElementById("pkPreset").value] || 0;
-        const memberBonus = MEMBER_PRESETS[document.getElementById("memberPreset").value] || 0;
-        const accBonus = PET_ACCESSORY_PRESETS[document.getElementById("petAccessoryPreset").value] || 0;
-        const accBonusP = PET_ACCESSORYP_PRESETS[document.getElementById("petAccessoryPPreset").value] || 0;
-        const questBonus = FENDA_QUEST_PRESETS[document.getElementById("questPreset").value] || 0;
-        const bioBonus = BIO_REPUTATION_PRESETS[document.getElementById("bioReputationPreset").value] || 0;
-        const chefBonus = BIO_REPUTATION_PRESETS[document.getElementById("cheffeniaReputationPreset").value] || 0;
-        const casBonus = CAS_REPUTATION_PRESETS[document.getElementById("casReputationPreset").value] || 0;
-        const dominioBonus = DOMINIO_REPUTATION_PRESETS[document.getElementById("dominioReputationPreset").value] || 0;
-        const domainBonus = DOMINIO_COLLECT_PRESETS[document.getElementById("domainCollectPreset").value] || 0;
-        const guildBonus = GUILD_RANKING_PRESETS[document.getElementById("guildRankingPreset").value] || 0;
-        const categBonus = CATEG_RANKING_PRESETS[document.getElementById("categRankingPreset").value] || 0;
-        const trialBonus = TRIAL_RANKING_PRESETS[document.getElementById("trialRankingPreset").value] || 0;
-        const runasBonus = RUNAS_PRESETS[document.getElementById("runasPreset").value] || 0;
-        const runasblackBonus = RUNAS_BLACK_PRESETS[document.getElementById("runasBlackFridayPreset").value] || 0;
-        const rebornCBonus = REBORNC_PRESETS[document.getElementById("rebornCPreset").value] || 0;
-        const sealedBonus = SEA_REPUTATION_PRESETS[document.getElementById("sealedReputationPreset").value] || 0;
-        const tempBonus = TEMP_PRESETS[document.getElementById("temporadaPreset").value] || 0;
+        const rateBonus = RATE_PRESETS[modifiers.ratePreset] || 0;
+        const vipBonus = VIP_PRESETS[modifiers.vipPreset] || 0;
+        const petBonus = PET_PRESETS[modifiers.petPreset] || 0;
+        const pkBonus = PK_PRESETS[modifiers.pkPreset] || 0;
+        const memberBonus = MEMBER_PRESETS[modifiers.memberPreset] || 0;
+        const accBonus = PET_ACCESSORY_PRESETS[modifiers.petAccessoryPreset] || 0;
+        const accBonusP = PET_ACCESSORYP_PRESETS[modifiers.petAccessoryPPreset] || 0;
+        const questBonus = FENDA_QUEST_PRESETS[modifiers.questPreset] || 0;
+        const bioBonus = BIO_REPUTATION_PRESETS[modifiers.bioReputationPreset] || 0;
+        const chefBonus = BIO_REPUTATION_PRESETS[modifiers.cheffeniaReputationPreset] || 0;
+        const casBonus = CAS_REPUTATION_PRESETS[modifiers.casReputationPreset] || 0;
+        const dominioBonus = DOMINIO_REPUTATION_PRESETS[modifiers.dominioReputationPreset] || 0;
+        const domainBonus = DOMINIO_COLLECT_PRESETS[modifiers.domainCollectPreset] || 0;
+        const guildBonus = GUILD_RANKING_PRESETS[modifiers.guildRankingPreset] || 0;
+        const categBonus = CATEG_RANKING_PRESETS[modifiers.categRankingPreset] || 0;
+        const trialBonus = TRIAL_RANKING_PRESETS[modifiers.trialRankingPreset] || 0;
+        const runasBonus = RUNAS_PRESETS[modifiers.runasPreset] || 0;
+        const runasblackBonus = RUNAS_BLACK_PRESETS[modifiers.runasBlackFridayPreset] || 0;
+        const rebornCBonus = REBORNC_PRESETS[modifiers.rebornCPreset] || 0;
+        const sealedBonus = SEA_REPUTATION_PRESETS[modifiers.sealedReputationPreset] || 0;
+        const tempBonus = TEMP_PRESETS[modifiers.temporadaPreset] || 0;
 
         // monta payload
         const payload = {
@@ -379,27 +391,27 @@ function App() {
     }
 
     async function handleSim() {
-        const rateBonus = RATE_PRESETS[document.getElementById("ratePreset").value] || 0;
-        const vipBonus = VIP_PRESETS[document.getElementById("vipPreset").value] || 0;
-        const petBonus = PET_PRESETS[document.getElementById("petPreset").value] || 0;
-        const pkBonus = PK_PRESETS[document.getElementById("pkPreset").value] || 0;
-        const memberBonus = MEMBER_PRESETS[document.getElementById("memberPreset").value] || 0;
-        const accBonus = PET_ACCESSORY_PRESETS[document.getElementById("petAccessoryPreset").value] || 0;
-        const accBonusP = PET_ACCESSORYP_PRESETS[document.getElementById("petAccessoryPPreset").value] || 0;
-        const questBonus = FENDA_QUEST_PRESETS[document.getElementById("questPreset").value] || 0;
-        const bioBonus = BIO_REPUTATION_PRESETS[document.getElementById("bioReputationPreset").value] || 0;
-        const chefBonus = BIO_REPUTATION_PRESETS[document.getElementById("cheffeniaReputationPreset").value] || 0;
-        const casBonus = CAS_REPUTATION_PRESETS[document.getElementById("casReputationPreset").value] || 0;
-        const dominioBonus = DOMINIO_REPUTATION_PRESETS[document.getElementById("dominioReputationPreset").value] || 0;
-        const domainBonus = DOMINIO_COLLECT_PRESETS[document.getElementById("domainCollectPreset").value] || 0;
-        const guildBonus = GUILD_RANKING_PRESETS[document.getElementById("guildRankingPreset").value] || 0;
-        const categBonus = CATEG_RANKING_PRESETS[document.getElementById("categRankingPreset").value] || 0;
-        const trialBonus = TRIAL_RANKING_PRESETS[document.getElementById("trialRankingPreset").value] || 0;
-        const runasBonus = RUNAS_PRESETS[document.getElementById("runasPreset").value] || 0;
-        const runasblackBonus = RUNAS_BLACK_PRESETS[document.getElementById("runasBlackFridayPreset").value] || 0;
-        const rebornCBonus = REBORNC_PRESETS[document.getElementById("rebornCPreset").value] || 0;
-        const sealedBonus = SEA_REPUTATION_PRESETS[document.getElementById("sealedReputationPreset").value] || 0;
-        const tempBonus = TEMP_PRESETS[document.getElementById("temporadaPreset").value] || 0;
+        const rateBonus = RATE_PRESETS[modifiers.ratePreset] || 0;
+        const vipBonus = VIP_PRESETS[modifiers.vipPreset] || 0;
+        const petBonus = PET_PRESETS[modifiers.petPreset] || 0;
+        const pkBonus = PK_PRESETS[modifiers.pkPreset] || 0;
+        const memberBonus = MEMBER_PRESETS[modifiers.memberPreset] || 0;
+        const accBonus = PET_ACCESSORY_PRESETS[modifiers.petAccessoryPreset] || 0;
+        const accBonusP = PET_ACCESSORYP_PRESETS[modifiers.petAccessoryPPreset] || 0;
+        const questBonus = FENDA_QUEST_PRESETS[modifiers.questPreset] || 0;
+        const bioBonus = BIO_REPUTATION_PRESETS[modifiers.bioReputationPreset] || 0;
+        const chefBonus = BIO_REPUTATION_PRESETS[modifiers.cheffeniaReputationPreset] || 0;
+        const casBonus = CAS_REPUTATION_PRESETS[modifiers.casReputationPreset] || 0;
+        const dominioBonus = DOMINIO_REPUTATION_PRESETS[modifiers.dominioReputationPreset] || 0;
+        const domainBonus = DOMINIO_COLLECT_PRESETS[modifiers.domainCollectPreset] || 0;
+        const guildBonus = GUILD_RANKING_PRESETS[modifiers.guildRankingPreset] || 0;
+        const categBonus = CATEG_RANKING_PRESETS[modifiers.categRankingPreset] || 0;
+        const trialBonus = TRIAL_RANKING_PRESETS[modifiers.trialRankingPreset] || 0;
+        const runasBonus = RUNAS_PRESETS[modifiers.runasPreset] || 0;
+        const runasblackBonus = RUNAS_BLACK_PRESETS[modifiers.runasBlackFridayPreset] || 0;
+        const rebornCBonus = REBORNC_PRESETS[modifiers.rebornCPreset] || 0;
+        const sealedBonus = SEA_REPUTATION_PRESETS[modifiers.sealedReputationPreset] || 0;
+        const tempBonus = TEMP_PRESETS[modifiers.temporadaPreset] || 0;
 
         const payload = {
             item_id: itemId,
@@ -452,6 +464,8 @@ function App() {
         }
     }
 
+    // ... imports
+
     return (
         <Layout
             contents={contents}
@@ -472,10 +486,15 @@ function App() {
                 </>
             }
         >
-            <div className="card">
-                <h2>History Drop Simulator</h2>
-                <h4>O último doador terá suas informações como padrão até o próximo valor superior ou 30 dias corridos: Envie discord junto a doação!</h4>
-                <p>Último doador: Você? || Valor: R$0,00 / 0 Rops dividido por 8000 || Data de vencimento: </p>
+            <div className="card header-card">
+                <div className="header-info">
+                    <h2>History Drop Simulator</h2>
+                    <h4>O último doador terá suas informações como padrão até o próximo valor superior ou 30 dias corridos: Envie discord junto a doação!</h4>
+                    <p>Último doador: Você? || Valor: R$0,00 / 0 Rops dividido por 8000 || Data de vencimento: </p>
+                </div>
+                <div className="header-donation">
+                    <DonationCard />
+                </div>
             </div>
 
             {/* Se o modo tabela estiver ativo, mostra a tabela de monstros */}
@@ -488,18 +507,18 @@ function App() {
                     <p>Bônus Geral: {allDropsData.B_general_percent}% | Bônus Final: {allDropsData.B_final_percent}%</p>
                     <table style={{ width: "100%", borderCollapse: "collapse", marginTop: "10px" }}>
                         <thead>
-                            <tr style={{ background: "#f3f4f6" }}>
-                                <th style={{ padding: "8px", textAlign: "left" }}>Item</th>
-                                <th style={{ padding: "8px", textAlign: "right" }}>Base</th>
-                                <th style={{ padding: "8px", textAlign: "right" }}>Final</th>
+                            <tr style={{ background: "#1a1f2e", borderBottom: "2px solid #00d9ff" }}>
+                                <th style={{ padding: "8px", textAlign: "left", color: "#00d9ff" }}>Item</th>
+                                <th style={{ padding: "8px", textAlign: "right", color: "#00d9ff" }}>Base</th>
+                                <th style={{ padding: "8px", textAlign: "right", color: "#00d9ff" }}>Final</th>
                             </tr>
                         </thead>
                         <tbody>
                             {allDropsData.drops.map(d => (
-                                <tr key={d.item_id} style={{ borderBottom: "1px solid #eee" }}>
-                                    <td style={{ padding: "8px" }}>{d.item_name}</td>
-                                    <td style={{ padding: "8px", textAlign: "right" }}>{d.base_drop_percent}%</td>
-                                    <td style={{ padding: "8px", textAlign: "right", fontWeight: "bold", color: "#2563eb" }}>
+                                <tr key={d.item_id} style={{ borderBottom: "1px solid #2a3142" }}>
+                                    <td style={{ padding: "8px", color: "#e4e7eb" }}>{d.item_name}</td>
+                                    <td style={{ padding: "8px", textAlign: "right", color: "#9ca3af" }}>{d.base_drop_percent}%</td>
+                                    <td style={{ padding: "8px", textAlign: "right", fontWeight: "bold", color: "#00d9ff" }}>
                                         {d.p_final_percent.toFixed(4)}%
                                     </td>
                                 </tr>
@@ -513,63 +532,63 @@ function App() {
                 <div className="card">
                     <h3>Modificadores Gerais</h3>
                     <label>Rate do Servidor:
-                        <select id="ratePreset" onChange={recalculateDrops}>
+                        <select id="ratePreset" value={modifiers.ratePreset} onChange={handleModifierChange}>
                             {Object.keys(RATE_PRESETS).map(k => <option key={k} value={k}>{k}</option>)}
                         </select>
                     </label>
                     <label>VIP:
-                        <select id="vipPreset" onChange={recalculateDrops}>
+                        <select id="vipPreset" value={modifiers.vipPreset} onChange={handleModifierChange}>
                             {Object.keys(VIP_PRESETS).map(k => <option key={k} value={k}>{k}</option>)}
                         </select>
                     </label>
                     <label>Pet:
-                        <select id="petPreset" onChange={recalculateDrops}>
+                        <select id="petPreset" value={modifiers.petPreset} onChange={handleModifierChange}>
                             {Object.keys(PET_PRESETS).map(k => <option key={k} value={k}>{k}</option>)}
                         </select>
                     </label>
                     <label>PK Mode:
-                        <select id="pkPreset" onChange={recalculateDrops}>
+                        <select id="pkPreset" value={modifiers.pkPreset} onChange={handleModifierChange}>
                             <option value="0">Não</option>
                             <option value="1">Sim</option>
                         </select>
                     </label>
                     <label>Membro da Equipe (Villa?):
-                        <select id="memberPreset" onChange={recalculateDrops}>
+                        <select id="memberPreset" value={modifiers.memberPreset} onChange={handleModifierChange}>
                             <option value="0">Não</option>
                             <option value="1">Sim</option>
                         </select>
                     </label>
-                    <label>Reputação Bio 5:
-                        <select id="bioReputationPreset" onChange={recalculateDrops}>
+                    <label>Reputação Bio 5 (Extreme):
+                        <select id="bioReputationPreset" value={modifiers.bioReputationPreset} onChange={handleModifierChange}>
                             {Object.keys(BIO_REPUTATION_PRESETS).map(k => <option key={k} value={k}>{k}</option>)}
                         </select>
                     </label>
-                    <label>Reputação Cheffênia:
-                        <select id="cheffeniaReputationPreset" onChange={recalculateDrops}>
+                    <label>Reputação Cheffênia (Extreme):
+                        <select id="cheffeniaReputationPreset" value={modifiers.cheffeniaReputationPreset} onChange={handleModifierChange}>
                             {Object.keys(BIO_REPUTATION_PRESETS).map(k => <option key={k} value={k}>{k}</option>)}
                         </select>
                     </label>
 
                     <label>Reputação Selada:
-                        <select id="sealedReputationPreset" onChange={recalculateDrops}>
+                        <select id="sealedReputationPreset" value={modifiers.sealedReputationPreset} onChange={handleModifierChange}>
                             {Object.keys(SEA_REPUTATION_PRESETS).map(k => <option key={k} value={k}>{k}</option>)}
                         </select>
                     </label>
 
                     <label>Excelência Domínio:
-                        <select id="dominioReputationPreset" onChange={recalculateDrops}>
+                        <select id="dominioReputationPreset" value={modifiers.dominioReputationPreset} onChange={handleModifierChange}>
                             {Object.keys(DOMINIO_REPUTATION_PRESETS).map(k => <option key={k} value={k}>{k}</option>)}
                         </select>
                     </label>
 
                     <label>Domínio Coleta (Mineração/Pesca/Herbologia):
-                        <select id="domainCollectPreset" onChange={recalculateDrops}>
+                        <select id="domainCollectPreset" value={modifiers.domainCollectPreset} onChange={handleModifierChange}>
                             {Object.keys(DOMINIO_COLLECT_PRESETS).map(k => <option key={k} value={k}>{k}</option>)}
                         </select>
                     </label>
 
                     <label>Temporada:
-                        <select id="temporadaPreset" onChange={recalculateDrops}>
+                        <select id="temporadaPreset" value={modifiers.temporadaPreset} onChange={handleModifierChange}>
                             {Object.keys(TEMP_PRESETS).map(k => <option key={k} value={k}>{k}</option>)}
                         </select>
                     </label>
@@ -580,58 +599,58 @@ function App() {
                     <h3>Modificadores Finais</h3>
 
                     <label>Pet Acessório (Refino):
-                        <select id="petAccessoryPreset" onChange={recalculateDrops}>
+                        <select id="petAccessoryPreset" value={modifiers.petAccessoryPreset} onChange={handleModifierChange}>
                             {Object.keys(PET_ACCESSORY_PRESETS).map(k => <option key={k} value={k}>{k}</option>)}
                         </select>
                     </label>
 
                     <label>Pet Pingente (Refino):
-                        <select id="petAccessoryPPreset" onChange={recalculateDrops}>
+                        <select id="petAccessoryPPreset" value={modifiers.petAccessoryPPreset} onChange={handleModifierChange}>
                             {Object.keys(PET_ACCESSORYP_PRESETS).map(k => <option key={k} value={k}>{k}</option>)}
                         </select>
                     </label>
 
                     <label>Quest Fenda (Nível):
-                        <select id="questPreset" onChange={recalculateDrops}>
+                        <select id="questPreset" value={modifiers.questPreset} onChange={handleModifierChange}>
                             {Object.keys(FENDA_QUEST_PRESETS).map(k => <option key={k} value={k}>{k}</option>)}
                         </select>
                     </label>
 
                     <label>Reputação Casamento:
-                        <select id="casReputationPreset" onChange={recalculateDrops}>
+                        <select id="casReputationPreset" value={modifiers.casReputationPreset} onChange={handleModifierChange}>
                             {Object.keys(CAS_REPUTATION_PRESETS).map(k => <option key={k} value={k}>{k}</option>)}
                         </select>
                     </label>
 
                     <label>Guild Ranking (Posição):
-                        <select id="guildRankingPreset" onChange={recalculateDrops}>
+                        <select id="guildRankingPreset" value={modifiers.guildRankingPreset} onChange={handleModifierChange}>
                             {Object.keys(GUILD_RANKING_PRESETS).map(k => <option key={k} value={k}>{k}</option>)}
                         </select>
                     </label>
                     <label>Ranking Categoria (Posição):
-                        <select id="categRankingPreset" onChange={recalculateDrops}>
+                        <select id="categRankingPreset" value={modifiers.categRankingPreset} onChange={handleModifierChange}>
                             {Object.keys(CATEG_RANKING_PRESETS).map(k => <option key={k} value={k}>{k}</option>)}
                         </select>
                     </label>
                     <label>Trial Ranking (Posição):
-                        <select id="trialRankingPreset" onChange={recalculateDrops}>
+                        <select id="trialRankingPreset" value={modifiers.trialRankingPreset} onChange={handleModifierChange}>
                             {Object.keys(TRIAL_RANKING_PRESETS).map(k => <option key={k} value={k}>{k}</option>)}
                         </select>
                     </label>
                     <label>Runas GvG:
-                        <select id="runasPreset" onChange={recalculateDrops}>
+                        <select id="runasPreset" value={modifiers.runasPreset} onChange={handleModifierChange}>
                             {Object.keys(RUNAS_PRESETS).map(k => <option key={k} value={k}>{k}</option>)}
                         </select>
                     </label>
 
                     <label>Runas Black Friday:
-                        <select id="runasBlackFridayPreset" onChange={recalculateDrops}>
+                        <select id="runasBlackFridayPreset" value={modifiers.runasBlackFridayPreset} onChange={handleModifierChange}>
                             {Object.keys(RUNAS_BLACK_PRESETS).map(k => <option key={k} value={k}>{k}</option>)}
                         </select>
                     </label>
 
                     <label>Reborn Charge:
-                        <select id="rebornCPreset" onChange={recalculateDrops}>
+                        <select id="rebornCPreset" value={modifiers.rebornCPreset} onChange={handleModifierChange}>
                             {Object.keys(REBORNC_PRESETS).map(k => <option key={k} value={k}>{k}</option>)}
                         </select>
                     </label>

@@ -59,6 +59,113 @@ body {
   min-height: 100vh;
 }
 
+/* ==================== RIGHT PANEL (REMOVED) ==================== */
+/* .right-panel removed */
+
+/* ==================== HEADER CARD ==================== */
+.header-card {
+  display: flex !important;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 32px;
+}
+
+.header-info {
+  flex: 1;
+}
+
+.header-donation {
+  flex-shrink: 0;
+  width: 300px;
+}
+
+/* Ajustes visuais para o card de doação dentro do header */
+.header-card .donation-card {
+  margin-bottom: 0;
+  border: 1px solid var(--border-light);
+  background: var(--bg-primary);
+  padding: 8px 12px;
+  /* Reduzido */
+  height: 100%;
+  display: flex;
+  align-items: center;
+}
+
+.donation-content {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.pix-section {
+  display: flex;
+  flex-direction: column;
+  /* Alterado para column para nome ficar embaixo ou em cima conforme espaço, mas com img pequena */
+  align-items: center;
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+}
+
+.pix-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.pix-label {
+  font-size: 10px;
+  margin: 0;
+}
+
+.pix-name {
+  font-size: 10px;
+  color: var(--text-secondary);
+  font-weight: normal;
+  margin: 0;
+}
+
+.qr-code {
+  width: 80px;
+  /* Aumentado 25% (64px * 1.25) */
+  height: 80px;
+  border: 1px solid var(--border);
+}
+
+.rops-section {
+  margin-top: 0;
+  background: none;
+  border: none;
+  padding: 0;
+  border-left: 1px solid var(--border);
+  padding-left: 12px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.rops-title {
+  font-size: 10px;
+  margin-bottom: 4px;
+}
+
+.rops-char {
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+/* Ajuste do header para alinhar altura */
+.header-card {
+  align-items: center;
+}
+
+.header-donation {
+  width: auto;
+  /* Deixa o conteúdo definir a largura */
+}
+
 /* ==================== SIDEBAR ==================== */
 .sidebar {
   background: var(--bg-secondary);
@@ -274,65 +381,9 @@ body {
   text-align: center;
 }
 
-.pix-section {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 16px;
-  text-align: center;
-  margin-top: 16px;
-}
+/* Estilos de PIX e ROPS foram sobrescritos acima para o contexto do header, 
+   mas mantemos classes genéricas se precisar */
 
-.pix-label {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--accent-cyan);
-  margin-bottom: 12px;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-}
-
-.qr-code {
-  width: 120px;
-  height: 120px;
-  margin: 0 auto;
-  display: block;
-  border-radius: 8px;
-  border: 2px solid var(--border);
-}
-
-.pix-name {
-  margin-top: 12px;
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--text-secondary);
-}
-
-.rops-section {
-  margin-top: 16px;
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 16px;
-}
-
-.rops-title {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--text-secondary);
-  margin-bottom: 8px;
-}
-
-.rops-info {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.rops-char {
-  font-size: 12px;
-  color: var(--text-primary);
-}
 
 /* ==================== MAIN CONTENT ==================== */
 .main-content {
@@ -547,6 +598,15 @@ tbody tr:hover {
 
   .main-content {
     padding: 20px;
+  }
+
+  .header-card {
+    flex-direction: column;
+  }
+
+  .header-donation {
+    width: 100%;
+    margin-top: 16px;
   }
 }
 

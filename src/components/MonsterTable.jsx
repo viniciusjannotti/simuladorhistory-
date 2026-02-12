@@ -50,10 +50,10 @@ export default function MonsterTable({ data }) {
                                         {rate ? (
                                             <div>
                                                 <div style={{ fontSize: "14px", fontWeight: "bold", color: "#00d9ff" }}>
-                                                    {rate.final.toFixed(2)}%
+                                                    {rate.final.toFixed(4)}%
                                                 </div>
                                                 <div style={{ fontSize: "11px", color: "#9ca3af" }}>
-                                                    (base: {rate.base.toFixed(2)}%)
+                                                    (base: {rate.base.toFixed(4)}%)
                                                 </div>
                                             </div>
                                         ) : '-'}

@@ -610,7 +610,7 @@ function App() {
                             <option value="1">Sim</option>
                         </select>
                     </label>
-                    <label>Membro da Equipe (Villa?):
+                    <label>Membro HGC (Villa?):
                         <select id="memberPreset" value={modifiers.memberPreset} onChange={handleModifierChange}>
                             <option value="0">Não</option>
                             <option value="1">Sim</option>

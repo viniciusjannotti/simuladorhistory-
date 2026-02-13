@@ -97,7 +97,7 @@ function App() {
         ratePreset: "1x Temporada 260",
         vipPreset: "VIP 1+2",
         petPreset: "pET 90% + Grade A + Fantasia",
-        pkPreset: "Sim",
+        pkPreset: "1",
         memberPreset: "Não",
         bioReputationPreset: "5 Bolinhas",
         cheffeniaReputationPreset: "5 Bolinhas",
@@ -602,12 +602,6 @@ function App() {
                     <label>Pet:
                         <select id="petPreset" value={modifiers.petPreset} onChange={handleModifierChange}>
                             {Object.keys(PET_PRESETS).map(k => <option key={k} value={k}>{k}</option>)}
-                        </select>
-                    </label>
-                    <label>PK Mode:
-                        <select id="pkPreset" value={modifiers.pkPreset} onChange={handleModifierChange}>
-                            <option value="0">Não</option>
-                            <option value="1">Sim</option>
                         </select>
                     </label>
                     <label>Membro HGC (Villa?):

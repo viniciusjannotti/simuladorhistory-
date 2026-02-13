@@ -49,7 +49,19 @@ function App() {
     const REBORN_KAFRA_MAP = { none: 0, reborn_1: 1, reborn_2: 2, reborn_3: 3, reborn_4: 5, reborn_5: 8 };
 
     // consumíveis iniciais (checkbox state)
-    const [consumables, setConsumables] = useState({});
+    const [consumables, setConsumables] = useState({
+        calice: true,
+        drop_pot: true,
+        ativador: true,
+        lata: true,
+        fusion: true,
+        carnavalesco: true,
+        chicle: true,
+        revitalizadora: true,
+        doador: true,
+        black: true,
+        champs: true
+    });
     const consumablesList = {
         calice: "Cálice (+265%)",
         calice2: "Cálice II (+240%)",
@@ -71,9 +83,9 @@ function App() {
     };
 
     // maestrias e reborn
-    const [advMastery, setAdvMastery] = useState("none");     // aventureiro
-    const [birthMastery, setBirthMastery] = useState("none"); // aniversário
-    const [rebornMastery, setRebornMastery] = useState("none"); // Reborn Kafra
+    const [advMastery, setAdvMastery] = useState("adv_4");     // aventureiro
+    const [birthMastery, setBirthMastery] = useState("birth_4"); // aniversário
+    const [rebornMastery, setRebornMastery] = useState("reborn_5"); // Reborn Kafra
 
     // resultados
     const [calcResult, setCalcResult] = useState(null);
@@ -83,27 +95,29 @@ function App() {
     // modifiers state (controlled inputs)
     const [modifiers, setModifiers] = useState({
         ratePreset: "1x Temporada 260",
-        vipPreset: "Nenhum",
-        petPreset: "Nenhum",
-        pkPreset: "0",
-        memberPreset: "0",
-        bioReputationPreset: "0 Bolinhas",
-        cheffeniaReputationPreset: "0 Bolinhas",
-        sealedReputationPreset: "Nenhum",
-        dominioReputationPreset: "0 Bolinhas",
-        domainCollectPreset: "Nenhum",
+        vipPreset: "VIP 1+2",
+        petPreset: "pET 90% + Grade A + Fantasia",
+        pkPreset: "Sim",
+        memberPreset: "Não",
+        bioReputationPreset: "5 Bolinhas",
+        cheffeniaReputationPreset: "5 Bolinhas",
+        sealedReputationPreset: "4 Bolinhas",
+        dominioReputationPreset: "10 Bolinhas",
+        domainCollectPreset: "Três completas",
+        temporadaPreset: "18 Feitos",
+
+        petAccessoryPreset: "+10",
+        petAccessoryPPreset: "+1",
+        questPreset: "Ultimate",
+        casReputationPreset: "Nenhum",
         guildRankingPreset: "Nenhum",
         categRankingPreset: "Nenhum",
-        trialRankingPreset: "Nenhum",
+        trialRankingPreset: "Top Trial",
         runasPreset: "Nenhum",
-        runasBlackFridayPreset: "Nenhum",
-        rebornCPreset: "Nenhum",
-        temporadaPreset: "Nenhum",
-        // final mods
-        petAccessoryPreset: "Nenhum",
-        petAccessoryPPreset: "Nenhum",
-        questPreset: "Nenhuma",
-        casReputationPreset: "Nenhum"
+        runasBlackFridayPreset: "+15",
+        rebornCPreset: "Feito"
+
+
     });
 
     const handleModifierChange = (e) => {

@@ -82,7 +82,7 @@ function App() {
 
     // modifiers state (controlled inputs)
     const [modifiers, setModifiers] = useState({
-        ratePreset: "1x",
+        ratePreset: "1x Temporada 260",
         vipPreset: "Nenhum",
         petPreset: "Nenhum",
         pkPreset: "0",
@@ -534,7 +534,7 @@ function App() {
                 <div className="header-info">
                     <h2>History Drop Simulator</h2>
                     <h4>O último doador terá suas informações como padrão até o próximo valor superior ou 30 dias corridos: Envie discord junto a doação!</h4>
-                    <p>Último doador: Você? || Valor: R$0,00 / 0 Rops dividido por 8000 || Data de vencimento: </p>
+                    <p>Último doador: RagatangaSupremo || Valor: R$6,25 / 50k Rops dividido por 8000 || Data de vencimento: 13/03/2026 </p>
                 </div>
                 <div className="header-donation">
                     <DonationCard />

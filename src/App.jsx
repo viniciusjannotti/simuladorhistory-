@@ -106,6 +106,11 @@ function App() {
     };
 
     const handleSaveFarm = async (record) => {
+        if (!supabase) {
+            console.error('Supabase client not initialized.');
+            alert('Não foi possível salvar: Supabase não está configurado corretamente no arquivo .env');
+            return;
+        }
         try {
             const { error } = await supabase
                 .from('farm_records')
@@ -178,6 +183,8 @@ function App() {
 
     // Carrega registros do Supabase ao montar
     useEffect(() => {
+        if (!supabase) return;
+
         const fetchRecords = async () => {
             try {
                 const { data, error } = await supabase

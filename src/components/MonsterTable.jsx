@@ -1,12 +1,33 @@
 import React from 'react';
+import CommunityTooltipWrapper from './CommunityTooltipWrapper';
 
-export default function MonsterTable({ data }) {
+export default function MonsterTable({ data, contentId, levelId, onRegisterFarm, farmRecords }) {
     if (!data || !data.monsters || !data.drops) return null;
+
+    const florzinhaDrop = data.drops.find(d => d.item_id === 'florzinha');
+    const otherDrops = data.drops.filter(d => d.item_id !== 'florzinha');
+
+    // Fallback calculation for when florzinha is not in the data
+    const florzinhaVal = florzinhaDrop
+        ? Math.max(...data.monsters.map(m => florzinhaDrop.calculated_rates[m.monster_id]?.final || 0))
+        : Math.min(2.0 * (1 + data.B_general_percent / 100.0) * (1 + data.B_final_percent / 100.0), 90.0);
 
     return (
         <div className="card" style={{ overflowX: 'auto' }}>
-            <h3>Drops </h3>
-            <p>Bônus Geral: {data.B_general_percent}% | Bônus Final: {data.B_final_percent}%</p>
+            <div style={{ display: 'flex', justifyContent: 'flex-start', alignItems: 'center', marginBottom: '8px', flexWrap: 'wrap', gap: '24px' }}>
+                <h3 style={{ margin: 0 }}>Drops </h3>
+                <div className="drops-header-info" style={{ margin: 0, display: 'flex', alignItems: 'center' }}>
+                    <span>Bônus Geral: {data.B_general_percent}% | Bônus Final: {data.B_final_percent}%</span>
+                    <span className="florzinha-metric-header">
+                        🌸 Florzinha: <strong>{florzinhaVal.toFixed(4)}%</strong>
+                    </span>
+                    {(contentId === 'moedas' || contentId === 'villa_of_zenys' || contentId === 'fenda_maior' || contentId === 'trial' || contentId === 'glast_heim_extreme' || contentId === 'dominio') && (levelId === '1' || levelId === '2' || contentId === 'fenda_maior' || contentId === 'trial' || contentId === 'glast_heim_extreme' || contentId === 'dominio') && (
+                        <button className="btn-registrar" onClick={() => onRegisterFarm(contentId, levelId, data.drops)}>
+                            + Registrar Farm
+                        </button>
+                    )}
+                </div>
+            </div>
 
             <table style={{
                 width: "100%",
@@ -27,7 +48,7 @@ export default function MonsterTable({ data }) {
                     </tr>
                 </thead>
                 <tbody>
-                    {data.drops.map((drop) => (
+                    {otherDrops.map((drop) => (
                         <tr key={drop.item_id}>
                             <td style={{
                                 padding: "8px",
@@ -41,6 +62,7 @@ export default function MonsterTable({ data }) {
                             </td>
                             {data.monsters.map(monster => {
                                 const rate = drop.calculated_rates[monster.monster_id];
+
                                 return (
                                     <td key={monster.monster_id} style={{
                                         padding: "8px",
@@ -48,14 +70,19 @@ export default function MonsterTable({ data }) {
                                         textAlign: "center"
                                     }}>
                                         {rate ? (
-                                            <div>
+                                            <CommunityTooltipWrapper
+                                                contentId={contentId}
+                                                levelId={levelId}
+                                                mode={monster.monster_id}
+                                                itemKey={drop.item_id}
+                                            >
                                                 <div style={{ fontSize: "14px", fontWeight: "bold", color: "#00d9ff" }}>
                                                     {rate.final.toFixed(4)}%
                                                 </div>
                                                 <div style={{ fontSize: "11px", color: "#9ca3af" }}>
                                                     (base: {rate.base.toFixed(4)}%)
                                                 </div>
-                                            </div>
+                                            </CommunityTooltipWrapper>
                                         ) : '-'}
                                     </td>
                                 );

@@ -4,6 +4,9 @@ import MonsterTable from './components/MonsterTable';
 import CalcTable from './components/CalcTable';
 import SimTable from './components/SimTable';
 import DonationCard from './components/DonationCard';
+import CommunityTooltipWrapper from './components/CommunityTooltipWrapper';
+import FarmRegistrationModal from './components/FarmRegistrationModal';
+import { supabase } from './lib/supabaseClient';
 
 const API_BASE = import.meta.env.VITE_API_BASE || 'https://simulador-backend-x3u3.onrender.com';
 
@@ -92,11 +95,41 @@ function App() {
     const [simResult, setSimResult] = useState(null);
     const [connectionError, setConnectionError] = useState(null);
 
+    // Farm Registration State
+    const [farmRecords, setFarmRecords] = useState([]);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [modalContext, setModalContext] = useState({ contentId: '', levelId: '' });
+
+    const handleRegisterFarm = (contentId, levelId, availableDrops = []) => {
+        setModalContext({ contentId, levelId, availableDrops });
+        setIsModalOpen(true);
+    };
+
+    const handleSaveFarm = async (record) => {
+        try {
+            const { error } = await supabase
+                .from('farm_records')
+                .insert([{
+                    content_id: record.content_id,
+                    level_id: record.level_id,
+                    data: record
+                }]);
+
+            if (error) throw error;
+
+            setFarmRecords(prev => [record, ...prev]);
+            console.log('Novo registro salvo no Supabase:', record);
+        } catch (err) {
+            console.error('Erro ao salvar no Supabase:', err);
+            alert('Erro ao salvar registro no Supabase. Verifique suas credenciais no arquivo .env');
+        }
+    };
+
     // modifiers state (controlled inputs)
     const [modifiers, setModifiers] = useState({
         ratePreset: "1x Temporada 260",
         vipPreset: "VIP 1+2",
-        petPreset: "pET 90% + Grade A + Fantasia",
+        petPreset: "Pet 90% + Grade A + Fantasia",
         pkPreset: "1",
         memberPreset: "Não",
         bioReputationPreset: "5 Bolinhas",
@@ -141,6 +174,27 @@ function App() {
                 console.error("Erro ao carregar conteúdos:", err);
                 setConnectionError("Erro de conexão: Verifique se o backend está rodando.");
             });
+    }, []);
+
+    // Carrega registros do Supabase ao montar
+    useEffect(() => {
+        const fetchRecords = async () => {
+            try {
+                const { data, error } = await supabase
+                    .from('farm_records')
+                    .select('*')
+                    .order('created_at', { ascending: false });
+
+                if (error) throw error;
+
+                if (data) {
+                    setFarmRecords(data.map(r => r.data));
+                }
+            } catch (err) {
+                console.error('Erro ao buscar registros do Supabase:', err);
+            }
+        };
+        fetchRecords();
     }, []);
 
     // Carrega níveis quando o conteúdo muda
@@ -501,7 +555,6 @@ function App() {
         }
     }
 
-    // ... imports
 
     return (
         <Layout
@@ -548,7 +601,7 @@ function App() {
                 <div className="header-info">
                     <h2>History Drop Simulator</h2>
                     <h4>O último doador terá suas informações como padrão até o próximo valor superior ou 30 dias corridos: Envie discord junto a doação!</h4>
-                    <p>Último doador: RagatangaSupremo || Valor: R$6,25 / 50k Rops dividido por 8000 || Data de vencimento: 13/03/2026 </p>
+                    <p>Último doador: KENAI~ || Valor: R$6,25 / 50k Rops dividido por 8000 || Data de vencimento: 13/03/2026 </p>
                 </div>
                 <div className="header-donation">
                     <DonationCard />
@@ -556,35 +609,72 @@ function App() {
             </div>
 
             {/* Se o modo tabela estiver ativo, mostra a tabela de monstros */}
-            <MonsterTable data={monsterTableData} />
-
-            {/* Se o modo tabela não estiver ativo, ou seja, modo "normal", mostra os drops calculados naquela lista antiga */}
-            {!monsterTableData && allDropsData && (
-                <div className="card">
-                    <h3>Drops</h3>
-                    <p>Bônus Geral: {allDropsData.B_general_percent}% | Bônus Final: {allDropsData.B_final_percent}%</p>
-                    <table style={{ width: "100%", borderCollapse: "collapse", marginTop: "10px" }}>
-                        <thead>
-                            <tr style={{ background: "#1a1f2e", borderBottom: "2px solid #00d9ff" }}>
-                                <th style={{ padding: "8px", textAlign: "left", color: "#00d9ff" }}>Item</th>
-                                <th style={{ padding: "8px", textAlign: "right", color: "#00d9ff" }}>Base</th>
-                                <th style={{ padding: "8px", textAlign: "right", color: "#00d9ff" }}>Final</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {allDropsData.drops.map(d => (
-                                <tr key={d.item_id} style={{ borderBottom: "1px solid #2a3142" }}>
-                                    <td style={{ padding: "8px", color: "#e4e7eb" }}>{d.item_name}</td>
-                                    <td style={{ padding: "8px", textAlign: "right", color: "#9ca3af" }}>{d.base_drop_percent}%</td>
-                                    <td style={{ padding: "8px", textAlign: "right", fontWeight: "bold", color: "#00d9ff" }}>
-                                        {d.p_final_percent.toFixed(4)}%
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
+            {monsterTableData && (
+                <MonsterTable
+                    data={monsterTableData}
+                    contentId={selectedContent}
+                    levelId={selectedLevel}
+                    onRegisterFarm={handleRegisterFarm}
+                    farmRecords={farmRecords}
+                />
             )}
+            {!monsterTableData && allDropsData && (() => {
+                const florzinha = allDropsData.drops.find(d => d.item_id === 'florzinha');
+                const otherDrops = allDropsData.drops.filter(d => d.item_id !== 'florzinha');
+
+                // Fallback calculation for when florzinha is not in the data
+                const florzinhaVal = florzinha ? florzinha.p_final_percent :
+                    Math.min(2.0 * (1 + allDropsData.B_general_percent / 100.0) * (1 + allDropsData.B_final_percent / 100.0), 90.0);
+
+                return (
+                    <div className="card">
+                        <div style={{ display: 'flex', justifyContent: 'flex-start', alignItems: 'center', marginBottom: '8px', flexWrap: 'wrap', gap: '24px' }}>
+                            <h3 style={{ margin: 0 }}>Drops</h3>
+                            <div className="drops-header-info" style={{ margin: 0, display: 'flex', alignItems: 'center' }}>
+                                <span>Bônus Geral: {allDropsData.B_general_percent}% | Bônus Final: {allDropsData.B_final_percent}%</span>
+                                <span className="florzinha-metric-header">
+                                    🌸 Florzinha: <strong>{florzinhaVal.toFixed(4)}%</strong>
+                                </span>
+                                {(selectedContent === 'villa_of_zenys' || selectedContent === 'fenda_maior' || selectedContent === 'fenda_dimensional' || selectedContent === 'trial' || selectedContent === 'glast_heim_extreme' || selectedContent === 'dominio') && (
+                                    <button
+                                        className="btn-registrar"
+                                        onClick={() => handleRegisterFarm(selectedContent, selectedLevel, allDropsData.drops)}
+                                    >
+                                        + Registrar Farm
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+                        <table style={{ width: "100%", borderCollapse: "collapse", marginTop: "10px" }}>
+                            <thead>
+                                <tr style={{ background: "#1a1f2e", borderBottom: "2px solid #00d9ff" }}>
+                                    <th style={{ padding: "8px", textAlign: "left", color: "#00d9ff" }}>Item</th>
+                                    <th style={{ padding: "8px", textAlign: "right", color: "#00d9ff" }}>Base</th>
+                                    <th style={{ padding: "8px", textAlign: "right", color: "#00d9ff" }}>Final</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {otherDrops.map(d => (
+                                    <tr key={d.item_id} style={{ borderBottom: "1px solid #2a3142" }}>
+                                        <td style={{ padding: "8px", color: "#e4e7eb" }}>{d.item_name}</td>
+                                        <td style={{ padding: "8px", textAlign: "right", color: "#9ca3af" }}>{d.base_drop_percent}%</td>
+                                        <td style={{ padding: "8px", textAlign: "right", fontWeight: "bold", color: "#00d9ff" }}>
+                                            <CommunityTooltipWrapper
+                                                contentId={selectedContent}
+                                                levelId={selectedLevel}
+                                                mode="normal"
+                                                itemKey={d.item_id}
+                                            >
+                                                {d.p_final_percent.toFixed(4)}%
+                                            </CommunityTooltipWrapper>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                );
+            })()}
 
             <div className="row">
                 <div className="card">
@@ -759,7 +849,15 @@ function App() {
                 </div>
             </div>
 
-
+            <FarmRegistrationModal
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                onSave={handleSaveFarm}
+                contentId={modalContext.contentId}
+                levelId={modalContext.levelId}
+                availableDrops={modalContext.availableDrops}
+                farmRecords={farmRecords}
+            />
         </Layout>
     );
 }

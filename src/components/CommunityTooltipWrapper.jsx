@@ -9,11 +9,16 @@ import React from 'react';
 export default function CommunityTooltipWrapper({ contentId, levelId, mode, farmRecords, children }) {
     // Logic for Community Stats (Dynamic from local state)
     // Filters by content, level, and the specific monster mode
-    const relevantFarms = (farmRecords || []).filter(f =>
-        f.content_id === contentId &&
-        f.level_id === levelId &&
-        f.mode === mode
-    );
+    const relevantFarms = (farmRecords || []).filter(f => {
+        const contentMatch = f.content_id === contentId;
+        const levelMatch = f.level_id === levelId;
+
+        // If record has a mode field, it must match
+        // If record has no mode field, treat it as "normal" mode
+        const modeMatch = f.mode ? f.mode === mode : mode === 'normal';
+
+        return contentMatch && levelMatch && modeMatch;
+    });
 
     const samples = relevantFarms.length;
 

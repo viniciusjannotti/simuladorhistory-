@@ -672,6 +672,7 @@ function App() {
                                                 levelId={selectedLevel}
                                                 mode="normal"
                                                 itemKey={d.item_id}
+                                                farmRecords={farmRecords}
                                             >
                                                 {d.p_final_percent.toFixed(4)}%
                                             </CommunityTooltipWrapper>

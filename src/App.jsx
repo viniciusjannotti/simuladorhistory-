@@ -108,7 +108,7 @@ function App() {
     const handleSaveFarm = async (record) => {
         if (!supabase) {
             console.error('Supabase client not initialized.');
-            alert('Não foi possível salvar: Supabase não está configurado corretamente no arquivo .env');
+            alert('Não foi possível salvar:\n\n1. Supabase não configurado no Vercel (Adicione VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY nas configurações do projeto).\n2. Ou arquivo .env local incompleto.');
             return;
         }
         try {
@@ -591,13 +591,14 @@ function App() {
                             fontSize: "12px",
                             lineHeight: "1.4"
                         }}>
-                            <strong style={{ color: "#ef4444", display: "block", marginBottom: "4px" }}>⚠️ BACKEND DESLIGADO</strong>
+                            <strong style={{ color: "#ef4444", display: "block", marginBottom: "4px" }}>⚠️ BACKEND OU CONFIGURAÇÃO INDISPONÍVEL</strong>
                             {connectionError}
                             <hr style={{ margin: "8px 0", borderColor: "rgba(239, 68, 68, 0.2)" }} />
                             <div style={{ fontSize: "11px", color: "#9ca3af" }}>
-                                1. Instale o Python (winget)<br />
-                                2. `cd simulador-backend`<br />
-                                3. `python -m uvicorn main:app --reload`
+                                {selectedContent === 'moedas' || selectedContent === 'monster_table' ?
+                                    "Este conteúdo requer o Backend Local rodando ou suporte no servidor remoto." :
+                                    "Verifique se as variáveis de ambiente (VITE_) estão configuradas no Vercel."
+                                }
                             </div>
                         </div>
                     )}

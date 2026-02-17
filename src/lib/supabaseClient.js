@@ -10,5 +10,9 @@ const isReady = supabaseUrl && supabaseAnonKey && supabaseUrl !== 'YOUR_SUPABASE
 export const supabase = isReady ? createClient(supabaseUrl, supabaseAnonKey) : null;
 
 if (!supabase) {
-    console.warn('Supabase client NOT initialized. Persistence disabled.');
+    console.warn('Supabase client NOT initialized. Possible reasons:');
+    console.warn('- Missing environment variables (VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY)');
+    console.warn('- Environment variables not configured in Vercel settings');
+    console.log('Detected URL:', supabaseUrl);
+    console.log('Has Key:', !!supabaseAnonKey);
 }

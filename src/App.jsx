@@ -108,16 +108,10 @@ function App() {
 
     const handleSaveFarm = async (record) => {
         if (!supabase) {
-            console.error('[Audit] Supabase client not initialized.');
             alert('Não foi possível salvar:\n\n1. Supabase não configurado no Vercel (Adicione VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY nas configurações do projeto).\n2. Ou arquivo .env local incompleto.');
             return;
         }
 
-        console.log('[Audit] Attempting to save record:', {
-            content_id: record.content_id,
-            level_id: record.level_id,
-            item_count: record.items?.length
-        });
 
         try {
             // Standardize record before saving
@@ -136,22 +130,16 @@ function App() {
                 .select(); // Select back to verify what was actually stored
 
             if (error) {
-                console.error('[Audit] Insert Error Details:', {
-                    code: error.code,
-                    message: error.message,
-                    hint: error.hint
-                });
                 throw error;
             }
 
-            console.log('[Audit] Insert successful. DB response:', data);
+
 
             // Update local state with the exact record we saved
             setFarmRecords(prev => [finalRecord, ...prev]);
-            console.log('[Audit] Local state updated with new farm.');
         } catch (err) {
-            console.error('[Audit] Global Save Exception:', err);
-            alert('Erro ao salvar registro no Supabase. Verifique logs no console (Audit).');
+            console.error('Erro ao salvar no Supabase:', err);
+            alert('Erro ao salvar registro no Supabase. Verifique sua conexão.');
         }
     };
 
@@ -211,34 +199,20 @@ function App() {
         if (!supabase) return;
 
         const fetchRecords = async () => {
-            const now = new Date().toLocaleTimeString();
-            console.log(`[Audit] [${now}] fetchRecords called`);
-
             try {
                 // Check Session First
-                const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-                if (sessionError) console.error('[Audit] Session check error:', sessionError);
+                const { data: { session } } = await supabase.auth.getSession();
 
-                console.log('[Audit] Session Info:', {
-                    isAuthenticated: !!session,
-                    userId: session?.user?.id || 'anonymous',
-                });
 
                 const { data, error, count } = await supabase
                     .from('farm_records')
                     .select('*', { count: 'exact' })
                     .order('created_at', { ascending: false });
 
-                if (error) {
-                    console.error('[Audit] Select Query Error:', {
-                        code: error.code,
-                        message: error.message,
-                        hint: error.hint
-                    });
-                    throw error;
-                }
+                if (error) throw error;
 
-                console.log(`[Audit] Query finished. Found ${data?.length || 0} records. Total count: ${count}`);
+
+
 
                 if (data) {
                     const mapped = data.map(r => {
@@ -247,7 +221,6 @@ function App() {
                             try {
                                 recordData = JSON.parse(recordData);
                             } catch (e) {
-                                console.error('[Audit] JSON Parse Error for record ID:', r.id, e);
                                 recordData = {};
                             }
                         }
@@ -262,21 +235,19 @@ function App() {
                         };
                     });
 
-                    console.log('[Audit] Mapping successful. Sample record:', mapped[0]);
                     setFarmRecords(mapped);
                 } else {
                     setFarmRecords([]);
                 }
             } catch (err) {
-                console.error('[Audit] Global Fetch Exception:', err);
+                console.error('Erro ao buscar registros:', err);
             }
         };
 
         fetchRecords();
 
-        // Listen for Auth changes too, just in case session restores later
+        // Listen for Auth changes
         const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
-            console.log('[Audit] Auth state changed:', event, session?.user?.id);
             if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
                 fetchRecords();
             }

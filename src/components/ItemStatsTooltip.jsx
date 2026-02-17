@@ -116,11 +116,6 @@ export default function ItemStatsTooltip({ contentId, levelId, itemId, farmRecor
                         </div>
                     </>
                 )}
-
-                {/* Debug info - hidden but searchable if needed */}
-                <div style={{ fontSize: "8px", color: "#374151", marginTop: "8px", textAlign: "right" }}>
-                    ID: {contentId}:{levelId} | Records: {(farmRecords || []).length}
-                </div>
             </div>
         </div>
     );

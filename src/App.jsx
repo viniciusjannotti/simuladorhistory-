@@ -196,11 +196,22 @@ function App() {
                 if (error) throw error;
 
                 if (data) {
-                    setFarmRecords(data.map(r => ({
-                        ...r.data,
-                        content_id: r.content_id,
-                        level_id: r.level_id
-                    })));
+                    setFarmRecords(data.map(r => {
+                        let recordData = r.data;
+                        if (typeof recordData === 'string') {
+                            try {
+                                recordData = JSON.parse(recordData);
+                            } catch (e) {
+                                console.error('Error parsing record data:', e);
+                                recordData = {};
+                            }
+                        }
+                        return {
+                            ...recordData,
+                            content_id: r.content_id,
+                            level_id: r.level_id
+                        };
+                    }));
                 }
             } catch (err) {
                 console.error('Erro ao buscar registros do Supabase:', err);

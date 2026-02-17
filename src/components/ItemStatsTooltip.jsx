@@ -9,16 +9,31 @@ import React from 'react';
 export default function ItemStatsTooltip({ contentId, levelId, itemId, farmRecords, children }) {
     // Filter farms that have this specific item
     const relevantFarms = (farmRecords || []).filter(f => {
-        const contentMatch = String(f.content_id).toLowerCase() === String(contentId).toLowerCase();
-        const levelMatch = String(f.level_id).toLowerCase() === String(levelId).toLowerCase();
-        const hasItem = f.items?.some(i => String(i.item_id).toLowerCase() === String(itemId).toLowerCase());
+        const farmContentId = String(f.content_id || '').toLowerCase().trim();
+        const farmLevelId = String(f.level_id || '').toLowerCase().trim();
+        const targetContentId = String(contentId || '').toLowerCase().trim();
+        const targetLevelId = String(levelId || '').toLowerCase().trim();
+
+        const contentMatch = farmContentId === targetContentId;
+        const levelMatch = farmLevelId === targetLevelId;
+
+        // Try to match item by id or name as a fallback
+        const hasItem = f.items?.some(i => {
+            const farmItemId = String(i.item_id || '').toLowerCase().trim();
+            const targetItemId = String(itemId || '').toLowerCase().trim();
+            return farmItemId === targetItemId;
+        });
 
         return contentMatch && levelMatch && hasItem;
     });
 
     // Aggregate statistics for this item
     const stats = relevantFarms.reduce((acc, farm) => {
-        const item = farm.items.find(i => String(i.item_id).toLowerCase() === String(itemId).toLowerCase());
+        const item = farm.items.find(i => {
+            const farmItemId = String(i.item_id || '').toLowerCase().trim();
+            const targetItemId = String(itemId || '').toLowerCase().trim();
+            return farmItemId === targetItemId;
+        });
 
         return {
             total_samples: acc.total_samples + 1,

@@ -218,7 +218,7 @@ function App() {
             }
         };
         fetchRecords();
-    }, []);
+    }, [supabase]);
 
     // Carrega níveis quando o conteúdo muda
     const loadLevels = (contentId) => {

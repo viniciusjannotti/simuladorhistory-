@@ -9,16 +9,16 @@ import React from 'react';
 export default function ItemStatsTooltip({ contentId, levelId, itemId, farmRecords, children }) {
     // Filter farms that have this specific item
     const relevantFarms = (farmRecords || []).filter(f => {
-        const contentMatch = f.content_id === contentId;
-        const levelMatch = f.level_id === levelId;
-        const hasItem = f.items?.some(i => i.item_id === itemId);
+        const contentMatch = String(f.content_id).toLowerCase() === String(contentId).toLowerCase();
+        const levelMatch = String(f.level_id).toLowerCase() === String(levelId).toLowerCase();
+        const hasItem = f.items?.some(i => String(i.item_id).toLowerCase() === String(itemId).toLowerCase());
 
         return contentMatch && levelMatch && hasItem;
     });
 
     // Aggregate statistics for this item
     const stats = relevantFarms.reduce((acc, farm) => {
-        const item = farm.items.find(i => i.item_id === itemId);
+        const item = farm.items.find(i => String(i.item_id).toLowerCase() === String(itemId).toLowerCase());
 
         return {
             total_samples: acc.total_samples + 1,

@@ -196,7 +196,11 @@ function App() {
                 if (error) throw error;
 
                 if (data) {
-                    setFarmRecords(data.map(r => r.data));
+                    setFarmRecords(data.map(r => ({
+                        ...r.data,
+                        content_id: r.content_id,
+                        level_id: r.level_id
+                    })));
                 }
             } catch (err) {
                 console.error('Erro ao buscar registros do Supabase:', err);

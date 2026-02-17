@@ -205,9 +205,10 @@ function App() {
 
 
                 const { data, error, count } = await supabase
-                    .from('farm_records')
+                    .from("community_stats")
                     .select('*', { count: 'exact' })
-                    .order('created_at', { ascending: false });
+                    .eq("content_id", selectedContent)
+                    .eq("level_id", selectedLevel);
 
                 if (error) throw error;
 

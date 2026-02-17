@@ -7,6 +7,23 @@ import React from 'react';
  * This is item-centric, not mob-centric.
  */
 export default function ItemStatsTooltip({ contentId, levelId, itemId, farmRecords, children }) {
+    // 0. Handle Loading State
+    if (farmRecords === null) {
+        return (
+            <div className="cell-hover">
+                {children}
+                <div className="community-tooltip">
+                    <div style={{ color: "#00d9ff", fontWeight: "bold", marginBottom: "4px" }}>
+                        Carregando estatísticas...
+                    </div>
+                    <div style={{ fontSize: "10px", color: "#9ca3af" }}>
+                        Sincronizando com Supabase...
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
     // 1. Filter farms that belong to this CONTENT (all levels)
     const contentFarms = (farmRecords || []).filter(f => {
         const farmContentId = String(f.content_id || '').toLowerCase().trim();

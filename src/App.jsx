@@ -97,7 +97,7 @@ function App() {
     const [connectionError, setConnectionError] = useState(null);
 
     // Farm Registration State
-    const [farmRecords, setFarmRecords] = useState([]);
+    const [farmRecords, setFarmRecords] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [modalContext, setModalContext] = useState({ contentId: '', levelId: '' });
 
@@ -108,26 +108,50 @@ function App() {
 
     const handleSaveFarm = async (record) => {
         if (!supabase) {
-            console.error('Supabase client not initialized.');
+            console.error('[Audit] Supabase client not initialized.');
             alert('Não foi possível salvar:\n\n1. Supabase não configurado no Vercel (Adicione VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY nas configurações do projeto).\n2. Ou arquivo .env local incompleto.');
             return;
         }
+
+        console.log('[Audit] Attempting to save record:', {
+            content_id: record.content_id,
+            level_id: record.level_id,
+            item_count: record.items?.length
+        });
+
         try {
-            const { error } = await supabase
+            // Standardize record before saving
+            const finalRecord = {
+                ...record,
+                timestamp: record.timestamp || new Date().toISOString()
+            };
+
+            const { data, error } = await supabase
                 .from('farm_records')
                 .insert([{
-                    content_id: record.content_id,
-                    level_id: record.level_id,
-                    data: record
-                }]);
+                    content_id: finalRecord.content_id,
+                    level_id: finalRecord.level_id,
+                    data: finalRecord
+                }])
+                .select(); // Select back to verify what was actually stored
 
-            if (error) throw error;
+            if (error) {
+                console.error('[Audit] Insert Error Details:', {
+                    code: error.code,
+                    message: error.message,
+                    hint: error.hint
+                });
+                throw error;
+            }
 
-            setFarmRecords(prev => [record, ...prev]);
-            console.log('Novo registro salvo no Supabase:', record);
+            console.log('[Audit] Insert successful. DB response:', data);
+
+            // Update local state with the exact record we saved
+            setFarmRecords(prev => [finalRecord, ...prev]);
+            console.log('[Audit] Local state updated with new farm.');
         } catch (err) {
-            console.error('Erro ao salvar no Supabase:', err);
-            alert('Erro ao salvar registro no Supabase. Verifique suas credenciais no arquivo .env');
+            console.error('[Audit] Global Save Exception:', err);
+            alert('Erro ao salvar registro no Supabase. Verifique logs no console (Audit).');
         }
     };
 
@@ -182,42 +206,85 @@ function App() {
             });
     }, []);
 
-    // Carrega registros do Supabase ao montar
+    // Carrega registros do Supabase ao montar ou ao mudar de nível
     useEffect(() => {
         if (!supabase) return;
 
         const fetchRecords = async () => {
+            const now = new Date().toLocaleTimeString();
+            console.log(`[Audit] [${now}] fetchRecords called`);
+
             try {
-                const { data, error } = await supabase
+                // Check Session First
+                const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+                if (sessionError) console.error('[Audit] Session check error:', sessionError);
+
+                console.log('[Audit] Session Info:', {
+                    isAuthenticated: !!session,
+                    userId: session?.user?.id || 'anonymous',
+                });
+
+                const { data, error, count } = await supabase
                     .from('farm_records')
-                    .select('*')
+                    .select('*', { count: 'exact' })
                     .order('created_at', { ascending: false });
 
-                if (error) throw error;
+                if (error) {
+                    console.error('[Audit] Select Query Error:', {
+                        code: error.code,
+                        message: error.message,
+                        hint: error.hint
+                    });
+                    throw error;
+                }
+
+                console.log(`[Audit] Query finished. Found ${data?.length || 0} records. Total count: ${count}`);
 
                 if (data) {
-                    setFarmRecords(data.map(r => {
+                    const mapped = data.map(r => {
                         let recordData = r.data;
                         if (typeof recordData === 'string') {
                             try {
                                 recordData = JSON.parse(recordData);
                             } catch (e) {
-                                console.error('Error parsing record data:', e);
+                                console.error('[Audit] JSON Parse Error for record ID:', r.id, e);
                                 recordData = {};
                             }
                         }
+
+                        // Merge DB columns back into data object for consistency
                         return {
-                            ...recordData,
+                            ...(recordData || {}),
                             content_id: r.content_id,
-                            level_id: r.level_id
+                            level_id: r.level_id,
+                            db_id: r.id,
+                            db_created_at: r.created_at
                         };
-                    }));
+                    });
+
+                    console.log('[Audit] Mapping successful. Sample record:', mapped[0]);
+                    setFarmRecords(mapped);
+                } else {
+                    setFarmRecords([]);
                 }
             } catch (err) {
-                console.error('Erro ao buscar registros do Supabase:', err);
+                console.error('[Audit] Global Fetch Exception:', err);
             }
         };
+
         fetchRecords();
+
+        // Listen for Auth changes too, just in case session restores later
+        const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+            console.log('[Audit] Auth state changed:', event, session?.user?.id);
+            if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+                fetchRecords();
+            }
+        });
+
+        return () => {
+            if (authListener?.subscription) authListener.subscription.unsubscribe();
+        };
     }, [supabase]);
 
     // Carrega níveis quando o conteúdo muda

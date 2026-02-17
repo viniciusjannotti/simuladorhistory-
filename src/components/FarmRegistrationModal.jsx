@@ -21,7 +21,8 @@ export default function FarmRegistrationModal({ isOpen, onClose, onSave, content
         florzinha: '',
         farm_time_minutes: '',
         runs_completed: '25',
-        bags_dropped: '0'
+        bags_dropped: '0',
+        mobs_killed: ''
     });
     const [droppedItems, setDroppedItems] = useState([{ item_id: '', quantity: 1 }]);
     const [error, setError] = useState('');
@@ -64,7 +65,8 @@ export default function FarmRegistrationModal({ isOpen, onClose, onSave, content
                 florzinha: '',
                 farm_time_minutes: '',
                 runs_completed: contentId === 'fenda_maior' ? '7' : (contentId === 'fenda_dimensional' || contentId === 'trial' ? '30' : '25'),
-                bags_dropped: '0'
+                bags_dropped: '0',
+                mobs_killed: ''
             });
             setDroppedItems([{ item_id: '', quantity: 1 }]);
             setError('');
@@ -166,9 +168,15 @@ export default function FarmRegistrationModal({ isOpen, onClose, onSave, content
             onSave(record);
         } else if (isSelada) {
             const farmTime = parseInt(formData.farm_time_minutes);
+            const mobsKilled = parseInt(formData.mobs_killed);
 
             if (!formData.farm_time_minutes || isNaN(farmTime) || farmTime < 5) {
                 setError('Tempo de Farm é obrigatório e deve ter no mínimo 5 minutos.');
+                return;
+            }
+
+            if (!formData.mobs_killed || isNaN(mobsKilled) || mobsKilled < 1) {
+                setError('Número de Mobs Mortos é obrigatório e deve ser maior que 0.');
                 return;
             }
 
@@ -182,10 +190,17 @@ export default function FarmRegistrationModal({ isOpen, onClose, onSave, content
                 return;
             }
 
+            // Calculate total items dropped
+            const totalItemsDropped = droppedItems
+                .filter(item => item.item_id !== '')
+                .reduce((sum, item) => sum + (parseInt(item.quantity) || 0), 0);
+
             const record = {
                 content_id: contentId,
                 level_id: levelId,
-                farm_time_minutes: farmTime,
+                mobs_killed: mobsKilled,
+                total_items_dropped: totalItemsDropped,
+                time_minutes: farmTime,
                 items: droppedItems.filter(item => item.item_id !== '').map(item => ({
                     item_id: item.item_id,
                     quantity: parseInt(item.quantity) || 0
@@ -377,6 +392,7 @@ export default function FarmRegistrationModal({ isOpen, onClose, onSave, content
         } else if (isGlast || isDominio) {
             const farmTime = parseInt(formData.farm_time_minutes);
             const florValue = parseFloat(formData.florzinha);
+            const mobsKilled = parseInt(formData.mobs_killed);
 
             if (isNaN(farmTime) || farmTime < 5 || farmTime > 240) {
                 setError('Tempo de Farm deve ser entre 5 e 240 minutos (4 horas).');
@@ -385,6 +401,11 @@ export default function FarmRegistrationModal({ isOpen, onClose, onSave, content
 
             if (isNaN(florValue) || florValue < 0) {
                 setError('Informe um valor válido para Florzinha (ex: 18.63).');
+                return;
+            }
+
+            if (!formData.mobs_killed || isNaN(mobsKilled) || mobsKilled < 1) {
+                setError('Número de Mobs Mortos é obrigatório e deve ser maior que 0.');
                 return;
             }
 
@@ -398,10 +419,17 @@ export default function FarmRegistrationModal({ isOpen, onClose, onSave, content
                 return;
             }
 
+            // Calculate total items dropped
+            const totalItemsDropped = droppedItems
+                .filter(item => item.item_id !== '')
+                .reduce((sum, item) => sum + (parseInt(item.quantity) || 0), 0);
+
             const record = {
                 content_id: contentId,
                 level_id: levelId,
-                farm_time_minutes: farmTime,
+                mobs_killed: mobsKilled,
+                total_items_dropped: totalItemsDropped,
+                time_minutes: farmTime,
                 florzinha: parseFloat(florValue.toFixed(2)),
                 items: droppedItems.filter(item => item.item_id !== '').map(item => ({
                     item_id: item.item_id,
@@ -480,16 +508,22 @@ export default function FarmRegistrationModal({ isOpen, onClose, onSave, content
 
                     {contentId === 'moedas' && levelId === '2' && (
                         <>
-                            <div className="form-group">
-                                <label>Tempo de Farm (minutos)*</label>
-                                <input type="number" name="farm_time_minutes" value={formData.farm_time_minutes} onChange={handleChange} placeholder="Mín: 5" />
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                                <div className="form-group">
+                                    <label>Tempo de Farm (minutos)*</label>
+                                    <input type="number" name="farm_time_minutes" value={formData.farm_time_minutes} onChange={handleChange} placeholder="Mín: 5" />
+                                </div>
+                                <div className="form-group">
+                                    <label>Mobs Mortos*</label>
+                                    <input type="number" name="mobs_killed" value={formData.mobs_killed} onChange={handleChange} placeholder="Ex: 150" min="1" />
+                                </div>
                             </div>
 
                             <div style={{ marginBottom: '16px' }}>
                                 <label style={{ display: 'block', fontSize: '13px', color: '#9ca3af', marginBottom: '8px', borderBottom: '1px solid #2a3142', paddingBottom: '4px' }}>Itens Dropados</label>
                                 {droppedItems.map((item, index) => {
                                     const usedItemIds = droppedItems.filter((_, i) => i !== index).map(di => di.item_id);
-                                    const options = AVAILABLE_ITEMS.filter(ai => !usedItemIds.includes(ai.id));
+                                    const options = MODAL_AVAILABLE_ITEMS.filter(ai => !usedItemIds.includes(ai.id));
 
                                     return (
                                         <div key={index} style={{ display: 'flex', gap: '8px', marginBottom: '8px', alignItems: 'flex-end' }}>
@@ -508,7 +542,7 @@ export default function FarmRegistrationModal({ isOpen, onClose, onSave, content
                                         </div>
                                     );
                                 })}
-                                {droppedItems.length < AVAILABLE_ITEMS.length && (
+                                {droppedItems.length < MODAL_AVAILABLE_ITEMS.length && (
                                     <button type="button" onClick={addItemRow} className="btn-secondary" style={{ fontSize: '12px', width: '100%', marginTop: '4px' }}>+ Adicionar outro item</button>
                                 )}
                             </div>
@@ -554,9 +588,17 @@ export default function FarmRegistrationModal({ isOpen, onClose, onSave, content
                                     <input type="number" name="farm_time_minutes" value={formData.farm_time_minutes} onChange={handleChange} placeholder={(isGlast || isDominio) ? "Máx: 240" : "Mín: 5"} />
                                 </div>
                             </div>
-                            <div className="form-group">
-                                <label>Florzinha*</label>
-                                <input type="number" step="0.01" name="florzinha" value={formData.florzinha} onChange={handleChange} placeholder="Ex: 12.34" />
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                                <div className="form-group">
+                                    <label>Florzinha*</label>
+                                    <input type="number" step="0.01" name="florzinha" value={formData.florzinha} onChange={handleChange} placeholder="Ex: 12.34" />
+                                </div>
+                                {(isGlast || isDominio) && (
+                                    <div className="form-group">
+                                        <label>Mobs Mortos*</label>
+                                        <input type="number" name="mobs_killed" value={formData.mobs_killed} onChange={handleChange} placeholder="Ex: 200" min="1" />
+                                    </div>
+                                )}
                             </div>
 
                             <div className="form-items-section" style={{ borderTop: '1px solid #2d3748', marginTop: '16px', paddingTop: '16px' }}>

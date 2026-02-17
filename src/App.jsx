@@ -5,6 +5,7 @@ import CalcTable from './components/CalcTable';
 import SimTable from './components/SimTable';
 import DonationCard from './components/DonationCard';
 import CommunityTooltipWrapper from './components/CommunityTooltipWrapper';
+import ItemStatsTooltip from './components/ItemStatsTooltip';
 import FarmRegistrationModal from './components/FarmRegistrationModal';
 import { supabase } from './lib/supabaseClient';
 
@@ -664,18 +665,19 @@ function App() {
                             <tbody>
                                 {otherDrops.map(d => (
                                     <tr key={d.item_id} style={{ borderBottom: "1px solid #2a3142" }}>
-                                        <td style={{ padding: "8px", color: "#e4e7eb" }}>{d.item_name}</td>
-                                        <td style={{ padding: "8px", textAlign: "right", color: "#9ca3af" }}>{d.base_drop_percent}%</td>
-                                        <td style={{ padding: "8px", textAlign: "right", fontWeight: "bold", color: "#00d9ff" }}>
-                                            <CommunityTooltipWrapper
+                                        <td style={{ padding: "8px", color: "#e4e7eb" }}>
+                                            <ItemStatsTooltip
                                                 contentId={selectedContent}
                                                 levelId={selectedLevel}
-                                                mode="normal"
-                                                itemKey={d.item_id}
+                                                itemId={d.item_id}
                                                 farmRecords={farmRecords}
                                             >
-                                                {d.p_final_percent.toFixed(4)}%
-                                            </CommunityTooltipWrapper>
+                                                {d.item_name}
+                                            </ItemStatsTooltip>
+                                        </td>
+                                        <td style={{ padding: "8px", textAlign: "right", color: "#9ca3af" }}>{d.base_drop_percent}%</td>
+                                        <td style={{ padding: "8px", textAlign: "right", fontWeight: "bold", color: "#00d9ff" }}>
+                                            {d.p_final_percent.toFixed(4)}%
                                         </td>
                                     </tr>
                                 ))}

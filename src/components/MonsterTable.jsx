@@ -1,5 +1,5 @@
 import React from 'react';
-import CommunityTooltipWrapper from './CommunityTooltipWrapper';
+import ItemStatsTooltip from './ItemStatsTooltip';
 
 export default function MonsterTable({ data, contentId, levelId, onRegisterFarm, farmRecords }) {
     if (!data || !data.monsters || !data.drops) return null;
@@ -58,7 +58,14 @@ export default function MonsterTable({ data, contentId, levelId, onRegisterFarm,
                                 left: 0,
                                 background: "#151923"
                             }}>
-                                {drop.item_name}
+                                <ItemStatsTooltip
+                                    contentId={contentId}
+                                    levelId={levelId}
+                                    itemId={drop.item_id}
+                                    farmRecords={farmRecords}
+                                >
+                                    {drop.item_name}
+                                </ItemStatsTooltip>
                             </td>
                             {data.monsters.map(monster => {
                                 const rate = drop.calculated_rates[monster.monster_id];
@@ -70,19 +77,14 @@ export default function MonsterTable({ data, contentId, levelId, onRegisterFarm,
                                         textAlign: "center"
                                     }}>
                                         {rate ? (
-                                            <CommunityTooltipWrapper
-                                                contentId={contentId}
-                                                levelId={levelId}
-                                                mode={monster.monster_id}
-                                                itemKey={drop.item_id}
-                                            >
+                                            <>
                                                 <div style={{ fontSize: "14px", fontWeight: "bold", color: "#00d9ff" }}>
                                                     {rate.final.toFixed(4)}%
                                                 </div>
                                                 <div style={{ fontSize: "11px", color: "#9ca3af" }}>
                                                     (base: {rate.base.toFixed(4)}%)
                                                 </div>
-                                            </CommunityTooltipWrapper>
+                                            </>
                                         ) : '-'}
                                     </td>
                                 );

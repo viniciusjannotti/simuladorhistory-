@@ -10,6 +10,9 @@ import { supabase } from './lib/supabaseClient';
 
 const API_BASE = import.meta.env.VITE_API_BASE || 'https://simulador-backend-x3u3.onrender.com';
 
+// Track community stats requests to prevent race conditions
+let lastCommunityRequestId = 0;
+
 function App() {
     const [itemId, setItemId] = useState('refinadora_complexa_18_savage');
     const [numKills, setNumKills] = useState(100);
@@ -196,26 +199,50 @@ function App() {
     useEffect(() => {
         if (!supabase) return;
 
+        // Capturamos este ID para ignorar respostas de requests "atropelados"
+        const requestId = ++lastCommunityRequestId;
+
+        // Reset state to null (Loading) immediately when dependencies change
+        setCommunityStats(null);
+
+        // Guard: Only fetch if we have both content and level
+        if (!selectedContent || !selectedLevel) {
+            console.log("Query Params suppressed (missing IDs):", { selectedContent, selectedLevel });
+            return;
+        }
+
         const fetchCommunityStats = async () => {
             try {
-                const { data: { session } } = await supabase.auth.getSession();
+                console.log("Query Params:", selectedContent, selectedLevel);
 
                 // Buscamos da VIEW agregada, não da tabela bruta
                 const { data, error } = await supabase
                     .from('community_stats')
                     .select('*')
                     .eq('content_id', selectedContent)
-                    .eq('level_id', selectedLevel);
+                    .eq('level_id', String(selectedLevel));
 
                 if (error) throw error;
 
-                if (data) {
-                    setCommunityStats(data);
+                // Race condition check: only proceed if this is still the latest request
+                if (requestId !== lastCommunityRequestId) {
+                    console.log("Ignored stale community stats response for request", requestId);
+                    return;
+                }
+
+                console.log("RAW DATA FROM SUPABASE:", data);
+
+                if (data && data.length > 0) {
+                    // Normalizamos para objeto único (a view já agrega por content/level)
+                    setCommunityStats(data[0]);
                 } else {
-                    setCommunityStats([]);
+                    setCommunityStats([]); // Indica que buscou mas não há dados
                 }
             } catch (err) {
                 console.error('Erro ao buscar estatísticas da comunidade:', err);
+                if (requestId === lastCommunityRequestId) {
+                    setCommunityStats([]);
+                }
             }
         };
 

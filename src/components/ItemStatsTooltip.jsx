@@ -7,9 +7,9 @@ import React from 'react';
  * This is item-centric, not mob-centric.
  */
 export default function ItemStatsTooltip({ contentId, levelId, itemId, communityStats, children }) {
-    // 0. Handle Loading / Empty state as "Loading"
-    // We treat [] or null as loading until the fetch in App.jsx completes
-    if (!communityStats || communityStats.length === 0) {
+    // 0. Handle Loading state (null)
+    // We treat null as loading. [] means fetch finished but found no data.
+    if (communityStats === null) {
         return (
             <div className="cell-hover">
                 {children}
@@ -22,11 +22,12 @@ export default function ItemStatsTooltip({ contentId, levelId, itemId, community
         );
     }
 
-    // Direct access to the single row for this content/level
-    const row = communityStats[0];
+    // 1. Get the row. 
+    // App.jsx now provides the single row object directly, or [] if no data found.
+    const row = (!Array.isArray(communityStats) && communityStats) ? communityStats : null;
 
-    // Diagnostic Log as requested
-    console.log("[Tooltip Row Used]", row);
+    // 2. Log FINAL ROW for auditing
+    console.log("ROW FINAL:", row);
 
     return (
         <div className="cell-hover">
@@ -36,26 +37,26 @@ export default function ItemStatsTooltip({ contentId, levelId, itemId, community
                     Estatísticas da Comunidade
                 </div>
 
-                {row && row.total_runs > 0 ? (
+                {row ? (
                     <>
                         <div style={{ fontSize: "12px", marginBottom: "2px" }}>
-                            Amostras: <span style={{ color: "#fff", fontWeight: "bold" }}>{row.total_runs} farms</span>
+                            Amostras: <span style={{ color: "#fff", fontWeight: "bold" }}>{(row.total_samples || row.total_runs)} farms</span>
                         </div>
 
                         {row.avg_florzinha !== null && row.avg_florzinha !== undefined && (
                             <div style={{ fontSize: "12px", marginBottom: "2px" }}>
-                                Média Florzinha: <span style={{ color: "#fff", fontWeight: "bold" }}>{Number(row.avg_florzinha).toFixed(2)}%</span>
+                                Média florzinha: <span style={{ color: "#fff", fontWeight: "bold" }}>{Number(row.avg_florzinha).toFixed(2)}%</span>
                             </div>
                         )}
 
                         {row.avg_multiplier !== null && row.avg_multiplier !== undefined && (
                             <div style={{ fontSize: "12px", marginBottom: "2px" }}>
-                                Média Multiplicador: <span style={{ color: "#fff", fontWeight: "bold" }}>{Number(row.avg_multiplier).toFixed(2)}x</span>
+                                Multiplicador médio: <span style={{ color: "#fff", fontWeight: "bold" }}>{Number(row.avg_multiplier).toFixed(2)}x</span>
                             </div>
                         )}
 
                         <div style={{ fontSize: "12px", marginBottom: "2px" }}>
-                            Total drops: <span style={{ color: "#00ff88", fontWeight: "bold" }}>{row.total_drops}</span>
+                            Total drops: <span style={{ color: "#00ff88", fontWeight: "bold" }}>{(row.total_items_dropped || row.total_drops)}</span>
                         </div>
 
                         {row.drop_rate_real !== null && row.drop_rate_real !== undefined && (
@@ -77,7 +78,7 @@ export default function ItemStatsTooltip({ contentId, levelId, itemId, community
                         )}
 
                         <div style={{ fontSize: "10px", color: "#9ca3af", marginTop: "6px", borderTop: "1px dashed #4b5563", paddingTop: "4px" }}>
-                            Baseado em {row.total_time} min de farm total
+                            Baseado em {(row.total_time_minutes || row.total_time)} min de farm total
                         </div>
                     </>
                 ) : (

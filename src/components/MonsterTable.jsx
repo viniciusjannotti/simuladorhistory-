@@ -1,7 +1,7 @@
 import React from 'react';
 import ItemStatsTooltip from './ItemStatsTooltip';
 
-export default function MonsterTable({ data, contentId, levelId, onRegisterFarm, farmRecords }) {
+export default function MonsterTable({ data, contentId, levelId, onRegisterFarm, communityStats }) {
     if (!data || !data.monsters || !data.drops) return null;
 
     const florzinhaDrop = data.drops.find(d => d.item_id === 'florzinha');
@@ -62,7 +62,7 @@ export default function MonsterTable({ data, contentId, levelId, onRegisterFarm,
                                     contentId={contentId}
                                     levelId={levelId}
                                     itemId={drop.item_id}
-                                    farmRecords={farmRecords}
+                                    communityStats={communityStats}
                                 >
                                     {drop.item_name}
                                 </ItemStatsTooltip>

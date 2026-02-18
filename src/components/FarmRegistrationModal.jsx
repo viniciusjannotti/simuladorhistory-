@@ -11,7 +11,7 @@ const SELADA_AVAILABLE_ITEMS = [
     { id: 'album_seladas', name: 'Álbum de Cartas Seladas' }
 ];
 
-export default function FarmRegistrationModal({ isOpen, onClose, onSave, contentId, levelId, farmRecords, availableDrops = [] }) {
+export default function FarmRegistrationModal({ isOpen, onClose, onSave, contentId, levelId, communityStats, availableDrops = [] }) {
     const [formData, setFormData] = useState({
         mode: 'normal',
         quest_count: '0',
@@ -139,20 +139,7 @@ export default function FarmRegistrationModal({ isOpen, onClose, onSave, content
                 return;
             }
 
-            // Granular Anti-spam rule: check for SAME combination in the last 30 minutes
-            const recent = (farmRecords || []).find(f => {
-                const subDate = new Date(f.timestamp);
-                return subDate > thirtyMinutesAgo &&
-                    f.content_id === contentId &&
-                    f.level_id === levelId &&
-                    f.mode === formData.mode &&
-                    f.quest_count === parseInt(formData.quest_count);
-            });
 
-            if (recent) {
-                setError('Você já registrou esse modo recentemente. Aguarde 30 minutos para enviar novamente.');
-                return;
-            }
 
             const record = {
                 content_id: contentId,
@@ -180,15 +167,7 @@ export default function FarmRegistrationModal({ isOpen, onClose, onSave, content
                 return;
             }
 
-            const recent = (farmRecords || []).find(f => {
-                const subDate = new Date(f.timestamp);
-                return subDate > thirtyMinutesAgo && f.content_id === contentId && f.level_id === levelId;
-            });
 
-            if (recent) {
-                setError('Você já registrou um farm para este conteúdo recentemente. Aguarde 30 minutos.');
-                return;
-            }
 
             // Calculate total items dropped
             const totalItemsDropped = droppedItems
@@ -236,15 +215,7 @@ export default function FarmRegistrationModal({ isOpen, onClose, onSave, content
                 return;
             }
 
-            const recent = (farmRecords || []).find(f => {
-                const subDate = new Date(f.timestamp);
-                return subDate > thirtyMinutesAgo && f.content_id === contentId && f.level_id === levelId;
-            });
 
-            if (recent) {
-                setError('Você já registrou um farm para este conteúdo recentemente. Aguarde 30 minutos.');
-                return;
-            }
 
             const record = {
                 content_id: contentId,
@@ -277,15 +248,7 @@ export default function FarmRegistrationModal({ isOpen, onClose, onSave, content
                 return;
             }
 
-            const recent = (farmRecords || []).find(f => {
-                const subDate = new Date(f.timestamp);
-                return subDate > thirtyMinutesAgo && f.content_id === contentId && f.level_id === levelId;
-            });
 
-            if (recent) {
-                setError('Você já registrou um farm para este conteúdo recentemente. Aguarde 30 minutos.');
-                return;
-            }
 
             const record = {
                 content_id: contentId,
@@ -321,15 +284,7 @@ export default function FarmRegistrationModal({ isOpen, onClose, onSave, content
                 return;
             }
 
-            const recent = (farmRecords || []).find(f => {
-                const subDate = new Date(f.timestamp);
-                return subDate > thirtyMinutesAgo && f.content_id === contentId && f.level_id === levelId;
-            });
 
-            if (recent) {
-                setError('Você já registrou um farm para este conteúdo recentemente. Aguarde 30 minutos.');
-                return;
-            }
 
             const record = {
                 content_id: contentId,
@@ -365,15 +320,7 @@ export default function FarmRegistrationModal({ isOpen, onClose, onSave, content
                 return;
             }
 
-            const recent = (farmRecords || []).find(f => {
-                const subDate = new Date(f.timestamp);
-                return subDate > thirtyMinutesAgo && f.content_id === contentId && f.level_id === levelId;
-            });
 
-            if (recent) {
-                setError('Você já registrou um farm para este conteúdo recentemente. Aguarde 30 minutos.');
-                return;
-            }
 
             const record = {
                 content_id: contentId,
@@ -409,15 +356,7 @@ export default function FarmRegistrationModal({ isOpen, onClose, onSave, content
                 return;
             }
 
-            const recent = (farmRecords || []).find(f => {
-                const subDate = new Date(f.timestamp);
-                return subDate > thirtyMinutesAgo && f.content_id === contentId && f.level_id === levelId;
-            });
 
-            if (recent) {
-                setError('Você já registrou um farm para este conteúdo recentemente. Aguarde 30 minutos.');
-                return;
-            }
 
             // Calculate total items dropped
             const totalItemsDropped = droppedItems

@@ -4,7 +4,6 @@ import MonsterTable from './components/MonsterTable';
 import CalcTable from './components/CalcTable';
 import SimTable from './components/SimTable';
 import DonationCard from './components/DonationCard';
-import CommunityTooltipWrapper from './components/CommunityTooltipWrapper';
 import ItemStatsTooltip from './components/ItemStatsTooltip';
 import FarmRegistrationModal from './components/FarmRegistrationModal';
 import { supabase } from './lib/supabaseClient';
@@ -97,7 +96,7 @@ function App() {
     const [connectionError, setConnectionError] = useState(null);
 
     // Farm Registration State
-    const [farmRecords, setFarmRecords] = useState(null);
+    const [communityStats, setCommunityStats] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [modalContext, setModalContext] = useState({ contentId: '', levelId: '' });
 
@@ -133,10 +132,9 @@ function App() {
                 throw error;
             }
 
-
-
-            // Update local state with the exact record we saved
-            setFarmRecords(prev => [finalRecord, ...prev]);
+            console.log('Registro salvo com sucesso no Supabase.');
+            // Opcional: Recarregar communityStats se quisermos feedback imediato
+            // fetchCommunityStats(); 
         } catch (err) {
             console.error('Erro ao salvar no Supabase:', err);
             alert('Erro ao salvar registro no Supabase. Verifique sua conexão.');
@@ -194,70 +192,46 @@ function App() {
             });
     }, []);
 
-    // Carrega registros do Supabase ao montar ou ao mudar de nível
+    // Carrega estatísticas da comunidade do Supabase
     useEffect(() => {
         if (!supabase) return;
 
-        const fetchRecords = async () => {
+        const fetchCommunityStats = async () => {
             try {
-                // Check Session First
                 const { data: { session } } = await supabase.auth.getSession();
 
-
-                const { data, error, count } = await supabase
-                    .from("community_stats")
-                    .select('*', { count: 'exact' })
-                    .eq("content_id", selectedContent)
-                    .eq("level_id", selectedLevel);
+                // Buscamos da VIEW agregada, não da tabela bruta
+                const { data, error } = await supabase
+                    .from('community_stats')
+                    .select('*')
+                    .eq('content_id', selectedContent)
+                    .eq('level_id', selectedLevel);
 
                 if (error) throw error;
 
-
-
-
                 if (data) {
-                    const mapped = data.map(r => {
-                        let recordData = r.data;
-                        if (typeof recordData === 'string') {
-                            try {
-                                recordData = JSON.parse(recordData);
-                            } catch (e) {
-                                recordData = {};
-                            }
-                        }
-
-                        // Merge DB columns back into data object for consistency
-                        return {
-                            ...(recordData || {}),
-                            content_id: r.content_id,
-                            level_id: r.level_id,
-                            db_id: r.id,
-                            db_created_at: r.created_at
-                        };
-                    });
-
-                    setFarmRecords(mapped);
+                    setCommunityStats(data);
                 } else {
-                    setFarmRecords([]);
+                    setCommunityStats([]);
                 }
             } catch (err) {
-                console.error('Erro ao buscar registros:', err);
+                console.error('Erro ao buscar estatísticas da comunidade:', err);
             }
         };
 
-        fetchRecords();
+        fetchCommunityStats();
 
-        // Listen for Auth changes
+        // Listener para mudanças de auth
         const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
             if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-                fetchRecords();
+                fetchCommunityStats();
             }
         });
 
         return () => {
             if (authListener?.subscription) authListener.subscription.unsubscribe();
         };
-    }, [supabase]);
+    }, [supabase, selectedContent, selectedLevel]);
 
     // Carrega níveis quando o conteúdo muda
     const loadLevels = (contentId) => {
@@ -678,7 +652,7 @@ function App() {
                     contentId={selectedContent}
                     levelId={selectedLevel}
                     onRegisterFarm={handleRegisterFarm}
-                    farmRecords={farmRecords}
+                    communityStats={communityStats}
                 />
             )}
             {!monsterTableData && allDropsData && (() => {
@@ -724,7 +698,7 @@ function App() {
                                                 contentId={selectedContent}
                                                 levelId={selectedLevel}
                                                 itemId={d.item_id}
-                                                farmRecords={farmRecords}
+                                                communityStats={communityStats}
                                             >
                                                 {d.item_name}
                                             </ItemStatsTooltip>
@@ -921,7 +895,7 @@ function App() {
                 contentId={modalContext.contentId}
                 levelId={modalContext.levelId}
                 availableDrops={modalContext.availableDrops}
-                farmRecords={farmRecords}
+                communityStats={communityStats}
             />
         </Layout>
     );

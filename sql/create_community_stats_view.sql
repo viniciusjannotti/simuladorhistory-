@@ -1,127 +1,66 @@
 -- ============================================================================
--- Community Stats View - SQL Aggregation for Farm Records
--- ============================================================================
--- 
--- Purpose: Aggregate farm statistics from JSONB data in farm_records table
--- Grouping: By content_id and level_id
--- RLS: Inherits from farm_records table automatically
---
--- Usage in Supabase:
--- 1. Go to SQL Editor in Supabase Dashboard
--- 2. Paste this entire script
--- 3. Run it
--- 4. Query the view: SELECT * FROM community_stats WHERE content_id = 'fenda_maior';
---
+-- Community Stats View - Item-Based Aggregation
 -- ============================================================================
 
+DROP VIEW IF EXISTS community_stats CASCADE;
+
 CREATE OR REPLACE VIEW community_stats AS
+WITH flattened_items AS (
+    -- Explode the items array from farm_records
+    -- Using COALESCE to handle different naming conventions across contents
+    SELECT 
+        id as record_id,
+        content_id,
+        level_id,
+        COALESCE(
+            (data->>'farm_time_minutes')::numeric, 
+            (data->>'time_minutes')::numeric,
+            0
+        ) as farm_time,
+        COALESCE(
+            (data->>'num_kills')::numeric, 
+            (data->>'mobs_killed')::numeric,
+            0
+        ) as total_mobs,
+        (data->>'florzinha')::numeric as florzinha,
+        (data->>'multiplier')::numeric as multiplier,
+        (item->>'item_id') as item_id,
+        (item->>'quantity')::numeric as item_quantity
+    FROM farm_records,
+    jsonb_array_elements(data->'items') as item
+)
 SELECT 
     content_id,
     level_id,
+    item_id,
     
-    -- Total number of farm submissions
-    COUNT(*) as total_samples,
+    -- Total samples (number of unique records containing this item)
+    COUNT(DISTINCT record_id) as total_runs,
     
-    -- Total time aggregation
-    -- Handles both farm_time_minutes (Villa/Fenda/Trial/Glast/Domínio)
-    -- and first_fatigue_minutes (Moedas)
-    SUM(
-        COALESCE(
-            (data->>'farm_time_minutes')::integer,
-            (data->>'first_fatigue_minutes')::integer,
-            0
-        )
-    ) as total_time_minutes,
+    -- Sum of total mobs across all relevant records
+    SUM(total_mobs) as total_samples,
     
-    -- Average time per farm
-    AVG(
-        COALESCE(
-            (data->>'farm_time_minutes')::numeric,
-            (data->>'first_fatigue_minutes')::numeric,
-            0
-        )
-    ) as avg_time_minutes,
+    -- Sum of items dropped
+    SUM(item_quantity) as total_drops,
     
-    -- Total runs completed (Villa, Fenda, Trial)
-    -- Returns 0 for content types that don't have runs_completed
-    SUM(
-        COALESCE(
-            (data->>'runs_completed')::integer,
-            0
-        )
-    ) as total_runs_completed,
+    -- Total time in minutes
+    SUM(farm_time) as total_time,
     
-    -- Total bags dropped (Villa only)
-    SUM(
-        COALESCE(
-            (data->>'bags_dropped')::integer,
-            0
-        )
-    ) as total_bags_dropped,
+    -- Averages
+    AVG(florzinha) as avg_florzinha,
+    AVG(multiplier) as avg_multiplier,
     
-    -- Total items dropped (all content types with items array)
-    -- Sums all quantities from the items JSONB array
-    SUM(
-        COALESCE(
-            (
-                SELECT SUM((item->>'quantity')::integer)
-                FROM jsonb_array_elements(data->'items') as item
-            ),
-            0
-        )
-    ) as total_items_dropped,
+    -- Drop Rates
+    CASE 
+        WHEN SUM(total_mobs) > 0 THEN SUM(item_quantity) / SUM(total_mobs)
+        ELSE 0 
+    END as drop_rate_real,
     
-    -- Average florzinha percentage across all farms
-    AVG(
-        COALESCE(
-            (data->>'florzinha')::numeric,
-            0
-        )
-    ) as avg_florzinha,
-    
-    -- Timestamp of the most recent farm submission
-    MAX((data->>'timestamp')::timestamptz) as last_farm_timestamp,
-    
-    -- Timestamp of the first farm submission
-    MIN((data->>'timestamp')::timestamptz) as first_farm_timestamp,
-    
-    -- Count of farms by mode (for Moedas content)
-    -- Returns 0 for content types without mode field
-    COUNT(*) FILTER (WHERE data->>'mode' = 'normal') as count_mode_normal,
-    COUNT(*) FILTER (WHERE data->>'mode' = 'hard') as count_mode_hard,
-    COUNT(*) FILTER (WHERE data->>'mode' = 'extreme') as count_mode_extreme,
-    COUNT(*) FILTER (WHERE data->>'mode' = 'savage') as count_mode_savage
+    -- Items per hour
+    CASE 
+        WHEN SUM(farm_time) > 0 THEN (SUM(item_quantity) / (SUM(farm_time) / 60.0))
+        ELSE 0 
+    END as drops_per_hour
 
-FROM farm_records
-GROUP BY content_id, level_id;
-
--- ============================================================================
--- Grant permissions (Supabase handles this automatically via RLS)
--- ============================================================================
--- The view inherits RLS policies from the farm_records table
--- No additional permissions needed
-
--- ============================================================================
--- Example Queries
--- ============================================================================
-
--- Get stats for a specific content and level
--- SELECT * FROM community_stats 
--- WHERE content_id = 'fenda_maior' AND level_id = '18';
-
--- Get all content stats ordered by total samples
--- SELECT * FROM community_stats 
--- ORDER BY total_samples DESC;
-
--- Calculate drop rate per hour for a specific content
--- SELECT 
---     content_id,
---     level_id,
---     total_items_dropped,
---     total_time_minutes,
---     ROUND(
---         (total_items_dropped::numeric / NULLIF(total_time_minutes / 60.0, 0))::numeric,
---         2
---     ) as items_per_hour
--- FROM community_stats
--- WHERE content_id = 'fenda_maior';
+FROM flattened_items
+GROUP BY content_id, level_id, item_id;

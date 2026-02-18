@@ -10,8 +10,7 @@ import { supabase } from './lib/supabaseClient';
 
 const API_BASE = import.meta.env.VITE_API_BASE || 'https://simulador-backend-x3u3.onrender.com';
 
-// Track community stats requests to prevent race conditions
-let lastCommunityRequestId = 0;
+
 
 function App() {
     const [itemId, setItemId] = useState('refinadora_complexa_18_savage');
@@ -21,9 +20,13 @@ function App() {
 
     // Cascata de seletores
     const [contents, setContents] = useState([]);
-    const [selectedContent, setSelectedContent] = useState('fenda_maior');
+    const [selectedContent, setSelectedContent] = useState(() => {
+        return localStorage.getItem("selectedContent") || 'fenda_maior';
+    });
     const [levels, setLevels] = useState([]);
-    const [selectedLevel, setSelectedLevel] = useState('18');
+    const [selectedLevel, setSelectedLevel] = useState(() => {
+        return localStorage.getItem("selectedLevel") || '18';
+    });
     const [allDropsData, setAllDropsData] = useState(null); // Armazena resultado do /calculate-all
     const [monsterTableData, setMonsterTableData] = useState(null); // Armazena resultado do /calculate-monster-table
 
@@ -198,67 +201,38 @@ function App() {
     // Carrega estatísticas da comunidade do Supabase
     useEffect(() => {
         if (!supabase) return;
+        if (!selectedContent || !selectedLevel) return;
 
-        // Capturamos este ID para ignorar respostas de requests "atropelados"
-        const requestId = ++lastCommunityRequestId;
-
-        // Reset state to null (Loading) immediately when dependencies change
         setCommunityStats(null);
 
-        // Guard: Only fetch if we have both content and level
-        if (!selectedContent || !selectedLevel) {
-            console.log("Query Params suppressed (missing IDs):", { selectedContent, selectedLevel });
-            return;
-        }
-
         const fetchCommunityStats = async () => {
-            try {
-                console.log("Query Params:", selectedContent, selectedLevel);
+            const { data, error } = await supabase
+                .from('community_stats')
+                .select('*')
+                .eq('content_id', selectedContent)
+                .eq('level_id', selectedLevel);
 
-                // Buscamos da VIEW agregada, não da tabela bruta
-                const { data, error } = await supabase
-                    .from('community_stats')
-                    .select('*')
-                    .eq('content_id', selectedContent)
-                    .eq('level_id', String(selectedLevel));
-
-                if (error) throw error;
-
-                // Race condition check: only proceed if this is still the latest request
-                if (requestId !== lastCommunityRequestId) {
-                    console.log("Ignored stale community stats response for request", requestId);
-                    return;
-                }
-
-                console.log("RAW DATA FROM SUPABASE:", data);
-
-                if (data && data.length > 0) {
-                    // Normalizamos para objeto único (a view já agrega por content/level)
-                    setCommunityStats(data[0]);
-                } else {
-                    setCommunityStats([]); // Indica que buscou mas não há dados
-                }
-            } catch (err) {
-                console.error('Erro ao buscar estatísticas da comunidade:', err);
-                if (requestId === lastCommunityRequestId) {
-                    setCommunityStats([]);
-                }
+            if (error) {
+                console.error("[CommunityStats] Erro ao buscar:", error);
+                setCommunityStats(null);
+                return;
             }
+
+            console.info(`[CommunityStats] Sucesso: ${data?.length || 0} itens carregados para ${selectedContent}/${selectedLevel}`);
+            setCommunityStats(data);
         };
 
         fetchCommunityStats();
+    }, [selectedContent, selectedLevel]);
 
-        // Listener para mudanças de auth
-        const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
-            if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-                fetchCommunityStats();
-            }
-        });
+    // Persiste seleções no localStorage
+    useEffect(() => {
+        localStorage.setItem("selectedContent", selectedContent);
+    }, [selectedContent]);
 
-        return () => {
-            if (authListener?.subscription) authListener.subscription.unsubscribe();
-        };
-    }, [supabase, selectedContent, selectedLevel]);
+    useEffect(() => {
+        localStorage.setItem("selectedLevel", selectedLevel);
+    }, [selectedLevel]);
 
     // Carrega níveis quando o conteúdo muda
     const loadLevels = (contentId) => {
@@ -722,10 +696,8 @@ function App() {
                                     <tr key={d.item_id} style={{ borderBottom: "1px solid #2a3142" }}>
                                         <td style={{ padding: "8px", color: "#e4e7eb" }}>
                                             <ItemStatsTooltip
-                                                contentId={selectedContent}
-                                                levelId={selectedLevel}
-                                                itemId={d.item_id}
                                                 communityStats={communityStats}
+                                                itemId={d.item_id}
                                             >
                                                 {d.item_name}
                                             </ItemStatsTooltip>

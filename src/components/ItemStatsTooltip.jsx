@@ -4,11 +4,10 @@ import React from 'react';
  * ItemStatsTooltip
  * 
  * Shows community statistics for a specific ITEM across all farms.
- * This is item-centric, not mob-centric.
+ * Architecture: granular per ITEM.
  */
-export default function ItemStatsTooltip({ contentId, levelId, itemId, communityStats, children }) {
+export default function ItemStatsTooltip({ communityStats, itemId, children }) {
     // 0. Handle Loading state (null)
-    // We treat null as loading. [] means fetch finished but found no data.
     if (communityStats === null) {
         return (
             <div className="cell-hover">
@@ -22,12 +21,13 @@ export default function ItemStatsTooltip({ contentId, levelId, itemId, community
         );
     }
 
-    // 1. Get the row. 
-    // App.jsx now provides the single row object directly, or [] if no data found.
-    const row = (!Array.isArray(communityStats) && communityStats) ? communityStats : null;
+    // 1. Find the specific row for this item
+    const row = Array.isArray(communityStats) ? communityStats.find(r => r.item_id === itemId) : null;
 
-    // 2. Log FINAL ROW for auditing
-    console.log("ROW FINAL:", row);
+    // 1.1 Debug log to verify data discovery
+    if (communityStats && communityStats.length > 0) {
+        console.debug(`[Tooltip Audit] Item: ${itemId} | Encontrado?: ${!!row}`);
+    }
 
     return (
         <div className="cell-hover">
@@ -40,7 +40,7 @@ export default function ItemStatsTooltip({ contentId, levelId, itemId, community
                 {row ? (
                     <>
                         <div style={{ fontSize: "12px", marginBottom: "2px" }}>
-                            Amostras: <span style={{ color: "#fff", fontWeight: "bold" }}>{(row.total_samples || row.total_runs)} farms</span>
+                            Amostras: <span style={{ color: "#fff", fontWeight: "bold" }}>{row.total_runs} farms</span>
                         </div>
 
                         {row.avg_florzinha !== null && row.avg_florzinha !== undefined && (
@@ -56,18 +56,12 @@ export default function ItemStatsTooltip({ contentId, levelId, itemId, community
                         )}
 
                         <div style={{ fontSize: "12px", marginBottom: "2px" }}>
-                            Total drops: <span style={{ color: "#00ff88", fontWeight: "bold" }}>{(row.total_items_dropped || row.total_drops)}</span>
+                            Total drops: <span style={{ color: "#00ff88", fontWeight: "bold" }}>{row.total_drops}</span>
                         </div>
 
                         {row.drop_rate_real !== null && row.drop_rate_real !== undefined && (
                             <div style={{ fontSize: "12px", marginTop: "4px", color: "#00d9ff" }}>
                                 Drop rate real: <span style={{ fontWeight: "bold" }}>{(Number(row.drop_rate_real) * 100).toFixed(2)}%</span>
-                            </div>
-                        )}
-
-                        {row.drop_rate_base_estimated !== null && row.drop_rate_base_estimated !== undefined && (
-                            <div style={{ fontSize: "12px", marginTop: "2px", color: "#00d9ff" }}>
-                                Drop rate base est.: <span style={{ fontWeight: "bold" }}>{(Number(row.drop_rate_base_estimated) * 100).toFixed(2)}%</span>
                             </div>
                         )}
 
@@ -78,7 +72,7 @@ export default function ItemStatsTooltip({ contentId, levelId, itemId, community
                         )}
 
                         <div style={{ fontSize: "10px", color: "#9ca3af", marginTop: "6px", borderTop: "1px dashed #4b5563", paddingTop: "4px" }}>
-                            Baseado em {(row.total_time_minutes || row.total_time)} min de farm total
+                            Baseado em {row.total_time} min de farm total
                         </div>
                     </>
                 ) : (

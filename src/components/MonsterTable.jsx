@@ -59,10 +59,8 @@ export default function MonsterTable({ data, contentId, levelId, onRegisterFarm,
                                 background: "#151923"
                             }}>
                                 <ItemStatsTooltip
-                                    contentId={contentId}
-                                    levelId={levelId}
-                                    itemId={drop.item_id}
                                     communityStats={communityStats}
+                                    itemId={drop.item_id}
                                 >
                                     {drop.item_name}
                                 </ItemStatsTooltip>

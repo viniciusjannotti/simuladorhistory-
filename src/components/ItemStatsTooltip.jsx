@@ -24,11 +24,6 @@ export default function ItemStatsTooltip({ communityStats, itemId, children }) {
     // 1. Find the specific row for this item
     const row = Array.isArray(communityStats) ? communityStats.find(r => r.item_id === itemId) : null;
 
-    // 1.1 Debug log to verify data discovery
-    if (communityStats && communityStats.length > 0) {
-        console.debug(`[Tooltip Audit] Item: ${itemId} | Encontrado?: ${!!row}`);
-    }
-
     return (
         <div className="cell-hover">
             {children}

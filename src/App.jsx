@@ -1,23 +1,17 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Layout from './components/Layout';
 import MonsterTable from './components/MonsterTable';
-import CalcTable from './components/CalcTable';
-import SimTable from './components/SimTable';
 import DonationCard from './components/DonationCard';
 import ItemStatsTooltip from './components/ItemStatsTooltip';
 import FarmRegistrationModal from './components/FarmRegistrationModal';
 import { supabase } from './lib/supabaseClient';
+import { logger } from './lib/logger';
 
 const API_BASE = import.meta.env.VITE_API_BASE || 'https://simulador-backend-x3u3.onrender.com';
 
 
 
 function App() {
-    const [itemId, setItemId] = useState('refinadora_complexa_18_savage');
-    const [numKills, setNumKills] = useState(100);
-    const [mc, setMc] = useState(10000);
-
-
     // Cascata de seletores
     const [contents, setContents] = useState([]);
     const [selectedContent, setSelectedContent] = useState(() => {
@@ -97,14 +91,16 @@ function App() {
     const [rebornMastery, setRebornMastery] = useState("reborn_5"); // Reborn Kafra
 
     // resultados
-    const [calcResult, setCalcResult] = useState(null);
-    const [simResult, setSimResult] = useState(null);
     const [connectionError, setConnectionError] = useState(null);
 
     // Farm Registration State
     const [communityStats, setCommunityStats] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [modalContext, setModalContext] = useState({ contentId: '', levelId: '' });
+
+    // Race condition prevention refs
+    const lastCalcController = useRef(null);
+    const lastSimController = useRef(null);
 
     const handleRegisterFarm = (contentId, levelId, availableDrops = []) => {
         setModalContext({ contentId, levelId, availableDrops });
@@ -138,11 +134,9 @@ function App() {
                 throw error;
             }
 
-            console.log('Registro salvo com sucesso no Supabase.');
-            // Opcional: Recarregar communityStats se quisermos feedback imediato
-            // fetchCommunityStats(); 
+            logger.log('Registro salvo com sucesso no Supabase.');
         } catch (err) {
-            console.error('Erro ao salvar no Supabase:', err);
+            logger.error('Erro ao salvar no Supabase:', err);
             alert('Erro ao salvar registro no Supabase. Verifique sua conexão.');
         }
     };
@@ -182,7 +176,9 @@ function App() {
 
     // Carrega conteúdos ao montar o componente
     useEffect(() => {
-        fetch(API_BASE + "/contents")
+        const controller = new AbortController();
+
+        fetch(API_BASE + "/contents", { signal: controller.signal })
             .then(res => res.json())
             .then(data => {
                 setContents(data.contents || []);
@@ -193,9 +189,12 @@ function App() {
                 setConnectionError(null);
             })
             .catch(err => {
-                console.error("Erro ao carregar conteúdos:", err);
+                if (err.name === 'AbortError') return;
+                logger.error("Erro ao carregar conteúdos:", err);
                 setConnectionError("Erro de conexão: Verifique se o backend está rodando.");
             });
+
+        return () => controller.abort();
     }, []);
 
     // Carrega estatísticas da comunidade do Supabase
@@ -203,6 +202,7 @@ function App() {
         if (!supabase) return;
         if (!selectedContent || !selectedLevel) return;
 
+        let isMounted = true;
         setCommunityStats(null);
 
         const fetchCommunityStats = async () => {
@@ -212,17 +212,20 @@ function App() {
                 .eq('content_id', selectedContent)
                 .eq('level_id', selectedLevel);
 
+            if (!isMounted) return;
+
             if (error) {
-                console.error("[CommunityStats] Erro ao buscar:", error);
+                logger.error("[CommunityStats] Erro ao buscar:", error);
                 setCommunityStats(null);
                 return;
             }
 
-            console.info(`[CommunityStats] Sucesso: ${data?.length || 0} itens carregados para ${selectedContent}/${selectedLevel}`);
+            logger.info(`[CommunityStats] Sucesso: ${data?.length || 0} itens carregados para ${selectedContent}/${selectedLevel}`);
             setCommunityStats(data);
         };
 
         fetchCommunityStats();
+        return () => { isMounted = false; };
     }, [selectedContent, selectedLevel]);
 
     // Persiste seleções no localStorage
@@ -246,7 +249,10 @@ function App() {
                     setSelectedLevel(data.levels[0].level_id);
                 }
             })
-            .catch(err => console.error("Erro ao carregar níveis:", err));
+            .catch(err => {
+                if (err.name === 'AbortError') return;
+                logger.error("Erro ao carregar níveis:", err);
+            });
     };
 
     // Função para recalcular drops quando modificadores mudam
@@ -310,10 +316,15 @@ function App() {
             consumables: Object.keys(consumables).filter(k => consumables[k])
         };
 
+        // Abort previous recalculation if any
+        if (lastCalcController.current) lastCalcController.current.abort();
+        lastCalcController.current = new AbortController();
+
         fetch(API_BASE + "/drop/calculate-all", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload)
+            body: JSON.stringify(payload),
+            signal: lastCalcController.current.signal
         })
             .then(res => {
                 if (!res.ok) throw new Error("API Indisponível (404/500)");
@@ -324,7 +335,7 @@ function App() {
                 setConnectionError(null);
             })
             .catch(err => {
-                // Silencioso no console, erro mostrado na UI
+                if (err.name === 'AbortError') return;
                 setConnectionError("Modo Normal indisponível no servidor remoto. Use o Backend Local.");
             });
     };
@@ -334,7 +345,7 @@ function App() {
         if (!selectedContent || !selectedLevel) return;
 
         // Primeiro verifica se é monster_table
-        const currentContent = contents.find(c => c.content_id === selectedContent);
+        const currentContent = Array.isArray(contents) ? contents.find(c => c.content_id === selectedContent) : null;
         if (!currentContent || currentContent.type !== 'monster_table') {
             return;
         }
@@ -397,10 +408,15 @@ function App() {
             consumables: Object.keys(consumables).filter(k => consumables[k])
         };
 
+        // Abort previous monster table fetch if any
+        if (lastCalcController.current) lastCalcController.current.abort();
+        lastCalcController.current = new AbortController();
+
         fetch(API_BASE + "/drop/calculate-monster-table", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload)
+            body: JSON.stringify(payload),
+            signal: lastCalcController.current.signal
         })
             .then(res => {
                 if (!res.ok) throw new Error("Conteúdo não suportado neste servidor");
@@ -411,7 +427,7 @@ function App() {
                 setConnectionError(null);
             })
             .catch(err => {
-                // Silencioso no console
+                if (err.name === 'AbortError') return;
                 setConnectionError("A Tabela de Monstros requer o Backend Local rodando.");
             });
     };
@@ -421,7 +437,7 @@ function App() {
         if (!selectedContent || !selectedLevel) return;
 
         // Busca o conteúdo atual para verificar o tipo
-        const currentContent = contents.find(c => c.content_id === selectedContent);
+        const currentContent = Array.isArray(contents) ? contents.find(c => c.content_id === selectedContent) : null;
 
         if (currentContent && currentContent.type === 'monster_table') {
             // Limpa a tabela normal e carrega a tabela de monstros
@@ -437,159 +453,8 @@ function App() {
     function handleConsumableChange(key) {
         setConsumables(prev => {
             const newVal = { ...prev, [key]: !prev[key] };
-            // O effect já vai recalcular
             return newVal;
         });
-    }
-
-    async function handleCalc() {
-        const rateBonus = RATE_PRESETS[modifiers.ratePreset] || 0;
-        const vipBonus = VIP_PRESETS[modifiers.vipPreset] || 0;
-        const petBonus = PET_PRESETS[modifiers.petPreset] || 0;
-        const pkBonus = PK_PRESETS[modifiers.pkPreset] || 0;
-        const memberBonus = MEMBER_PRESETS[modifiers.memberPreset] || 0;
-        const accBonus = PET_ACCESSORY_PRESETS[modifiers.petAccessoryPreset] || 0;
-        const accBonusP = PET_ACCESSORYP_PRESETS[modifiers.petAccessoryPPreset] || 0;
-        const questBonus = FENDA_QUEST_PRESETS[modifiers.questPreset] || 0;
-        const bioBonus = BIO_REPUTATION_PRESETS[modifiers.bioReputationPreset] || 0;
-        const chefBonus = BIO_REPUTATION_PRESETS[modifiers.cheffeniaReputationPreset] || 0;
-        const casBonus = CAS_REPUTATION_PRESETS[modifiers.casReputationPreset] || 0;
-        const dominioBonus = DOMINIO_REPUTATION_PRESETS[modifiers.dominioReputationPreset] || 0;
-        const domainBonus = DOMINIO_COLLECT_PRESETS[modifiers.domainCollectPreset] || 0;
-        const guildBonus = GUILD_RANKING_PRESETS[modifiers.guildRankingPreset] || 0;
-        const categBonus = CATEG_RANKING_PRESETS[modifiers.categRankingPreset] || 0;
-        const trialBonus = TRIAL_RANKING_PRESETS[modifiers.trialRankingPreset] || 0;
-        const runasBonus = RUNAS_PRESETS[modifiers.runasPreset] || 0;
-        const runasblackBonus = RUNAS_BLACK_PRESETS[modifiers.runasBlackFridayPreset] || 0;
-        const rebornCBonus = REBORNC_PRESETS[modifiers.rebornCPreset] || 0;
-        const sealedBonus = SEA_REPUTATION_PRESETS[modifiers.sealedReputationPreset] || 0;
-        const tempBonus = TEMP_PRESETS[modifiers.temporadaPreset] || 0;
-
-        // monta payload
-        const payload = {
-            item_id: itemId,
-            general_mods: {
-                server_rate: rateBonus,
-                vip_total: vipBonus,
-                pet_bonus: petBonus,
-                pk_bonus: pkBonus,
-                member_bonus: memberBonus,
-                bio_reputation: bioBonus,
-                cheffenia_reputation: chefBonus,
-                dominio_reputation: dominioBonus,
-                domain_collect: domainBonus,
-                sealed_bonus: sealedBonus,
-                temp_bonus: tempBonus,
-                profs: 0
-            },
-            final_mods: {
-                pet_equip_final: accBonus,
-                pet_equip_pingente_final: accBonusP,
-                quest_final: questBonus,
-                adv_mastery_percent: ADV_MASTER_MAP[advMastery] || 0,
-                birth_mastery_percent: BIRTH_MASTER_MAP[birthMastery] || 0,
-                reborn_mastery_percent: REBORN_KAFRA_MAP[rebornMastery] || 0,
-                cas_rep_final: casBonus,
-                guild_final: guildBonus,
-                categ_final: categBonus,
-                trial_final: trialBonus,
-                runas_final: runasBonus,
-                runas_black_final: runasblackBonus,
-                rebornC_final: rebornCBonus,
-            },
-            consumables: Object.keys(consumables).filter(k => consumables[k]),
-            num_kills: Number(numKills),
-            mc_simulations: Number(mc)
-        };
-
-        console.log("Payload CALC:", payload);
-
-        try {
-            const res = await fetch(API_BASE + "/drop/calculate", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(payload)
-            });
-            const data = await res.json();
-            setCalcResult(data);
-            setSimResult(null);
-        } catch (err) {
-            console.error(err);
-        }
-    }
-
-    async function handleSim() {
-        const rateBonus = RATE_PRESETS[modifiers.ratePreset] || 0;
-        const vipBonus = VIP_PRESETS[modifiers.vipPreset] || 0;
-        const petBonus = PET_PRESETS[modifiers.petPreset] || 0;
-        const pkBonus = PK_PRESETS[modifiers.pkPreset] || 0;
-        const memberBonus = MEMBER_PRESETS[modifiers.memberPreset] || 0;
-        const accBonus = PET_ACCESSORY_PRESETS[modifiers.petAccessoryPreset] || 0;
-        const accBonusP = PET_ACCESSORYP_PRESETS[modifiers.petAccessoryPPreset] || 0;
-        const questBonus = FENDA_QUEST_PRESETS[modifiers.questPreset] || 0;
-        const bioBonus = BIO_REPUTATION_PRESETS[modifiers.bioReputationPreset] || 0;
-        const chefBonus = BIO_REPUTATION_PRESETS[modifiers.cheffeniaReputationPreset] || 0;
-        const casBonus = CAS_REPUTATION_PRESETS[modifiers.casReputationPreset] || 0;
-        const dominioBonus = DOMINIO_REPUTATION_PRESETS[modifiers.dominioReputationPreset] || 0;
-        const domainBonus = DOMINIO_COLLECT_PRESETS[modifiers.domainCollectPreset] || 0;
-        const guildBonus = GUILD_RANKING_PRESETS[modifiers.guildRankingPreset] || 0;
-        const categBonus = CATEG_RANKING_PRESETS[modifiers.categRankingPreset] || 0;
-        const trialBonus = TRIAL_RANKING_PRESETS[modifiers.trialRankingPreset] || 0;
-        const runasBonus = RUNAS_PRESETS[modifiers.runasPreset] || 0;
-        const runasblackBonus = RUNAS_BLACK_PRESETS[modifiers.runasBlackFridayPreset] || 0;
-        const rebornCBonus = REBORNC_PRESETS[modifiers.rebornCPreset] || 0;
-        const sealedBonus = SEA_REPUTATION_PRESETS[modifiers.sealedReputationPreset] || 0;
-        const tempBonus = TEMP_PRESETS[modifiers.temporadaPreset] || 0;
-
-        const payload = {
-            item_id: itemId,
-            general_mods: {
-                server_rate: rateBonus,
-                vip_total: vipBonus,
-                pet_bonus: petBonus,
-                pk_bonus: pkBonus,
-                member_bonus: memberBonus,
-                bio_reputation: bioBonus,
-                cheffenia_reputation: chefBonus,
-                dominio_reputation: dominioBonus,
-                domain_collect: domainBonus,
-                sealed_bonus: sealedBonus,
-                temp_bonus: tempBonus,
-                profs: 0
-            },
-            final_mods: {
-                pet_equip_final: accBonus,
-                pet_equip_pingente_final: accBonusP,
-                quest_final: questBonus,
-                adv_mastery_percent: ADV_MASTER_MAP[advMastery] || 0,
-                birth_mastery_percent: BIRTH_MASTER_MAP[birthMastery] || 0,
-                reborn_mastery_percent: REBORN_KAFRA_MAP[rebornMastery] || 0,
-                cas_rep_final: casBonus,
-                guild_final: guildBonus,
-                categ_final: categBonus,
-                trial_final: trialBonus,
-                runas_final: runasBonus,
-                runas_black_final: runasblackBonus,
-                rebornC_final: rebornCBonus,
-            },
-            consumables: Object.keys(consumables).filter(k => consumables[k]),
-            num_kills: Number(numKills),
-            mc_simulations: Number(mc)
-        };
-
-        console.log("Payload SIM:", payload);
-
-        try {
-            const res = await fetch(API_BASE + "/drop/simulate", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(payload)
-            });
-            const data = await res.json();
-            setSimResult(data);
-        } catch (err) {
-            console.error(err);
-        }
     }
 
 

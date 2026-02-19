@@ -783,21 +783,100 @@ tbody tr:hover {
   }
 }
 
-/* ==================== ANIMATIONS ==================== */
-@keyframes glow {
-
-  0%,
-  100% {
-    box-shadow: 0 0 20px var(--accent-cyan-glow);
-  }
-
-  50% {
-    box-shadow: 0 0 30px var(--accent-cyan-glow);
-  }
+/* ==================== TOOLTIP & BADGE STYLES ==================== */
+.cell-hover {
+  position: relative;
+  cursor: help;
 }
 
-.game-button.active {
-  animation: glow 2s ease-in-out infinite;
+.community-tooltip {
+  position: absolute;
+  bottom: 120%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #1a1f2e;
+  border: 1px solid #374151;
+  padding: 12px;
+  border-radius: 8px;
+  width: 240px;
+  z-index: 100;
+  display: none;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+  pointer-events: none;
+}
+
+.cell-hover:hover .community-tooltip {
+  display: block;
+}
+
+.confidence-badge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  pointer-events: auto;
+  cursor: help;
+}
+
+.badge-low {
+  background: rgba(239, 68, 68, 0.2);
+  color: #fca5a5;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.badge-medium {
+  background: rgba(245, 158, 11, 0.2);
+  color: #fcd34d;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.badge-high {
+  background: rgba(16, 185, 129, 0.2);
+  color: #6ee7b7;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.sample-quality-divider {
+  margin: 10px 0 8px 0;
+  border: 0;
+  border-top: 1px solid #374151;
+}
+
+.sample-quality-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: #9ca3af;
+  margin-bottom: 6px;
+  display: block;
+}
+
+.sample-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  margin-bottom: 3px;
+  color: #e4e7eb;
+}
+
+.sample-label {
+  color: #9ca3af;
+}
+
+.sample-value {
+  font-weight: 500;
+}
+
+.last-update-text {
+  font-size: 10px;
+  color: #6b7280;
+  margin-top: 6px;
+  font-style: italic;
+  text-align: right;
 }
 
 /* ==================== DROPS HEADER ==================== */

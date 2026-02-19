@@ -60,10 +60,7 @@ SELECT
     CASE 
         WHEN SUM(farm_time) > 0 THEN (SUM(item_quantity) / (SUM(farm_time) / 60.0))
         ELSE 0 
-    END as drops_per_hour,
-
-    -- Last Update
-    MAX((data->>'timestamp')::timestamptz) as last_updated_at
+    END as drops_per_hour
 
 FROM flattened_items
 GROUP BY content_id, level_id, item_id;

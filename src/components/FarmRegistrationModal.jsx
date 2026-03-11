@@ -30,13 +30,13 @@ export default function FarmRegistrationModal({ isOpen, onClose, onSave, content
 
     // Dynamic Items selection
     const getAvailableItemList = () => {
-        if (contentId === 'fenda_maior' || contentId === 'fenda_dimensional' || contentId === 'trial' || contentId === 'glast_heim_extreme' || contentId === 'dominio') {
+        if (contentId === 'trilha_heroi' || contentId === 'fenda_dimensional' || contentId === 'caminho_iniciante' || contentId === 'glast_heim_extreme' || contentId === 'legiao' || contentId === 'campo_minerador') {
             // Use drops from API, excluding florzinha
             return availableDrops
                 .filter(d => d.item_id !== 'florzinha')
                 .map(d => ({ id: d.item_id, name: d.name || d.item_id }));
         }
-        if (contentId === 'moedas' && levelId === '2') {
+        if (contentId === 'moedas_cheffenia_bio5' && levelId === '2') {
             return SELADA_AVAILABLE_ITEMS;
         }
         return [];
@@ -44,14 +44,14 @@ export default function FarmRegistrationModal({ isOpen, onClose, onSave, content
 
     const MODAL_AVAILABLE_ITEMS = getAvailableItemList();
 
-    const isMoedas = contentId === 'moedas' && levelId === '1';
-    const isSelada = contentId === 'moedas' && levelId === '2';
+    const isMoedas = contentId === 'moedas_cheffenia_bio5' && levelId === '1';
+    const isSelada = contentId === 'moedas_cheffenia_bio5' && levelId === '2';
     const isVilla = contentId === 'villa_of_zenys';
-    const isFenda = contentId === 'fenda_maior';
+    const isFenda = contentId === 'trilha_heroi';
     const isFendaDimensional = contentId === 'fenda_dimensional';
-    const isTrial = contentId === 'trial';
+    const isTrial = contentId === 'caminho_iniciante';
     const isGlast = contentId === 'glast_heim_extreme';
-    const isDominio = contentId === 'dominio';
+    const isDominio = contentId === 'campo_minerador' || contentId === 'legiao';
 
     // Reset form when contentId changes or modal closes
     React.useEffect(() => {
@@ -64,7 +64,7 @@ export default function FarmRegistrationModal({ isOpen, onClose, onSave, content
                 start_time: '',
                 florzinha: '',
                 farm_time_minutes: '',
-                runs_completed: contentId === 'fenda_maior' ? '7' : (contentId === 'fenda_dimensional' || contentId === 'trial' ? '30' : '25'),
+                runs_completed: contentId === 'trilha_heroi' ? '7' : (contentId === 'fenda_dimensional' || contentId === 'caminho_iniciante' ? '30' : '25'),
                 bags_dropped: '0',
                 mobs_killed: ''
             });

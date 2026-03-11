@@ -15,7 +15,7 @@ function App() {
     // Cascata de seletores
     const [contents, setContents] = useState([]);
     const [selectedContent, setSelectedContent] = useState(() => {
-        return localStorage.getItem("selectedContent") || 'fenda_maior';
+        return localStorage.getItem("selectedContent") || 'caminho_iniciante';
     });
     const [levels, setLevels] = useState([]);
     const [selectedLevel, setSelectedLevel] = useState(() => {
@@ -25,70 +25,29 @@ function App() {
     const [monsterTableData, setMonsterTableData] = useState(null); // Armazena resultado do /calculate-monster-table
 
     // presets / tabelas — DEFINIDAS ANTES DE USAR
-    const RATE_PRESETS = { "100x": 0, "50x": 12, "25x": 25, "12x": 37, "1x": 50, "1x Temporada": 60, "1x Temporada 260": 65 };
+    const RATE_PRESETS = { "100x": 0, "50x": 12, "25x": 25, "12x": 37, "1x": 50, "1x Temporada": 60, "1x Temporada 275": 70 };
     const VIP_PRESETS = { "Nenhum": 0, "VIP 1": 10, "VIP 1+2": 20 };
-    const PET_PRESETS = { "Nenhum": 0, "Pet 22%": 7, "Pet 45%": 15, "Pet 90%": 30, "Pet 90% + Grade D": 42, "Pet 90% + Grade C": 54, "Pet 90% + Grade B": 78, "Pet 90% + Grade A": 126, "Pet 90% + Grade R": 150, "Pet 90% + Grade A + Fantasia": 168, "Pet 90% + Grade R + Fantasia": 200 };
-    const PK_PRESETS = { "0": 0, "1": 0 };
+    const PET_PRESETS = { "Nenhum": 0, "Pet 45%": 15, "Pet 70%": 20, "Pet 90%": 30, "Pet 150%": 50 };
     const MEMBER_PRESETS = { "0": 0, "1": 50 };
-    const PET_ACCESSORY_PRESETS = { "Nenhum": 0, "+0": 1, "+1": 2, "+2": 3, "+3": 4, "+4": 5, "+5": 6, "+6": 7, "+7": 8, "+8": 9, "+9": 10, "+10": 11, "+11": 12, "+12": 13, "+13": 14, "+14": 15, "+15": 16, "+16": 17, "+17": 18, "+18": 19, "+19": 20, "+20": 21 };
-    const PET_ACCESSORYP_PRESETS = { "Nenhum": 0, "+1": 1, "+5": 2, "+9": 3, "+13": 4, "+15": 5 };
-    const FENDA_QUEST_PRESETS = { "Nenhuma": 0, "Savage": 3, "Infernal": 4, "Pesadelo": 8, "Ultimate": 12 };
-    const BIO_REPUTATION_PRESETS = { "0 Bolinhas": 0, "1 Bolinha": 2, "2 Bolinhas": 4, "3 Bolinhas": 6, "4 Bolinhas": 8, "5 Bolinhas": 10 };
-    const CAS_REPUTATION_PRESETS = { "Nenhum": 0, "Rep <20": 1, "Rep >=20": 2 };
-    const DOMINIO_REPUTATION_PRESETS = { "0 Bolinhas": 0, "1 Bolinha": 1, "2 Bolinhas": 3, "3 Bolinhas": 6, "4 Bolinhas": 10, "5 Bolinhas": 15, "6 Bolinhas": 21, "7 Bolinhas": 28, "8 Bolinhas": 36, "9 Bolinhas": 45, "10 Bolinhas": 70 };
-    const DOMINIO_COLLECT_PRESETS = { "Nenhum": 0, "Uma completa": 1, "Duas completas": 2, "Três completas": 3 };
-    const GUILD_RANKING_PRESETS = { "Nenhum": 0, "Top 3": 1, "Top 2": 2, "Top 1": 3 };
-    const CATEG_RANKING_PRESETS = { "Nenhum": 0, "Top Categoria": 3 };
-    const TRIAL_RANKING_PRESETS = { "Nenhum": 0, "Top Trial": 2 };
-    const RUNAS_PRESETS = { "Nenhum": 0, "+5": 1, "+10": 2, "+15": 3 };
-    const RUNAS_BLACK_PRESETS = { "Nenhum": 0, "+5": 1, "+10": 2, "+15": 3 };
-
-    const REBORNC_PRESETS = { "Nenhum": 0, "Feito": 2 };
-    const SEA_REPUTATION_PRESETS = { "0 Bolinhas": 0, "1 Bolinha": 1, "2 Bolinhas": 2, "3 Bolinhas": 3, "4 Bolinhas": 4, "5 Bolinhas": 5 };
+    const BIO_REPUTATION_PRESETS = { "0 Bolinhas": 0, "1 Bolinha": 2, "2 Bolinhas": 4, "3 Bolinhas": 6 };
+    const CHEFF_PRESETS = { "Nenhum": 0, "1 Bolinha": 2, "2 Bolinhas": 4, "3 Bolinhas": 6 };
     const TEMP_PRESETS = { "Nenhum": 0, "5 Feitos": 2, "10 Feitos": 4, "14 Feitos": 6, "18 Feitos": 8 };
 
-    const ADV_MASTER_MAP = { none: 0, adv_1: 1, adv_2: 3, adv_3: 5, adv_4: 8 };
-    const BIRTH_MASTER_MAP = { none: 0, birth_1: 1, birth_2: 2, birth_3: 3, birth_4: 5 };
-    const REBORN_KAFRA_MAP = { none: 0, reborn_1: 1, reborn_2: 2, reborn_3: 3, reborn_4: 5, reborn_5: 8 };
 
     // consumíveis iniciais (checkbox state)
     const [consumables, setConsumables] = useState({
-        calice: true,
-        drop_pot: true,
-        ativador: true,
-        lata: true,
-        fusion: true,
-        carnavalesco: true,
-        chicle: true,
-        revitalizadora: true,
-        doador: true,
-        black: true,
-        champs: true
+
     });
     const consumablesList = {
-        calice: "Cálice (+265%)",
-        calice2: "Cálice II (+240%)",
+        calice: "Cálice (+220%)",
         chicle: "Chicle de Bola / Manual (+200%)",
         chiclete: "Chiclete (+100%)",
         lata: "Lata para Gatos (+20%)",
-        revitalizadora: "Poção Revitalizadora (+20%)",
         drop_pot: "Drop em Pote (+25%)",
         fusion: "Fusão em Pote (+25%)",
         doador: "Poção do Doador (+35%)",
-        doador_rmt: "Poção do Doador RMT (+35%)",
-        carnavalesco: "Elixir Carnavalesco (+2% Final)",
-        black: "Black Candy (+6% Final)",
-        agilidade: "Doce de Agilidade (+2% Final)",
-        skul: "Latão Skul (+1% Final)",
-        champs: "Pergaminho dos Campeões (+6% Final)",
-        ativador: "Ativador Universal (+5% Final)",
-        amantes: "Carta dos Amantes (+4% Final)",
-    };
 
-    // maestrias e reborn
-    const [advMastery, setAdvMastery] = useState("adv_4");     // aventureiro
-    const [birthMastery, setBirthMastery] = useState("birth_4"); // aniversário
-    const [rebornMastery, setRebornMastery] = useState("reborn_5"); // Reborn Kafra
+    };
 
     // resultados
     const [connectionError, setConnectionError] = useState(null);
@@ -143,29 +102,6 @@ function App() {
 
     // modifiers state (controlled inputs)
     const [modifiers, setModifiers] = useState({
-        ratePreset: "1x Temporada 260",
-        vipPreset: "VIP 1+2",
-        petPreset: "Pet 90% + Grade A + Fantasia",
-        pkPreset: "1",
-        memberPreset: "Não",
-        bioReputationPreset: "5 Bolinhas",
-        cheffeniaReputationPreset: "5 Bolinhas",
-        sealedReputationPreset: "4 Bolinhas",
-        dominioReputationPreset: "10 Bolinhas",
-        domainCollectPreset: "Três completas",
-        temporadaPreset: "18 Feitos",
-
-        petAccessoryPreset: "+10",
-        petAccessoryPPreset: "+1",
-        questPreset: "Ultimate",
-        casReputationPreset: "Nenhum",
-        guildRankingPreset: "Nenhum",
-        categRankingPreset: "Nenhum",
-        trialRankingPreset: "Top Trial",
-        runasPreset: "Nenhum",
-        runasBlackFridayPreset: "+15",
-        rebornCPreset: "Feito"
-
 
     });
 
@@ -262,23 +198,9 @@ function App() {
         const rateBonus = RATE_PRESETS[modifiers.ratePreset] || 0;
         const vipBonus = VIP_PRESETS[modifiers.vipPreset] || 0;
         const petBonus = PET_PRESETS[modifiers.petPreset] || 0;
-        const pkBonus = PK_PRESETS[modifiers.pkPreset] || 0;
-        const memberBonus = MEMBER_PRESETS[modifiers.memberPreset] || 0;
-        const accBonus = PET_ACCESSORY_PRESETS[modifiers.petAccessoryPreset] || 0;
-        const accBonusP = PET_ACCESSORYP_PRESETS[modifiers.petAccessoryPPreset] || 0;
-        const questBonus = FENDA_QUEST_PRESETS[modifiers.questPreset] || 0;
+        const memberBonus = Number(modifiers.memberPreset) || 0;
         const bioBonus = BIO_REPUTATION_PRESETS[modifiers.bioReputationPreset] || 0;
-        const chefBonus = BIO_REPUTATION_PRESETS[modifiers.cheffeniaReputationPreset] || 0;
-        const casBonus = CAS_REPUTATION_PRESETS[modifiers.casReputationPreset] || 0;
-        const dominioBonus = DOMINIO_REPUTATION_PRESETS[modifiers.dominioReputationPreset] || 0;
-        const domainBonus = DOMINIO_COLLECT_PRESETS[modifiers.domainCollectPreset] || 0;
-        const guildBonus = GUILD_RANKING_PRESETS[modifiers.guildRankingPreset] || 0;
-        const categBonus = CATEG_RANKING_PRESETS[modifiers.categRankingPreset] || 0;
-        const trialBonus = TRIAL_RANKING_PRESETS[modifiers.trialRankingPreset] || 0;
-        const runasBonus = RUNAS_PRESETS[modifiers.runasPreset] || 0;
-        const runasblackBonus = RUNAS_BLACK_PRESETS[modifiers.runasBlackFridayPreset] || 0;
-        const rebornCBonus = REBORNC_PRESETS[modifiers.rebornCPreset] || 0;
-        const sealedBonus = SEA_REPUTATION_PRESETS[modifiers.sealedReputationPreset] || 0;
+        const cheffBonus = CHEFF_PRESETS[modifiers.cheffPreset] || 0;
         const tempBonus = TEMP_PRESETS[modifiers.temporadaPreset] || 0;
 
         const payload = {
@@ -288,30 +210,13 @@ function App() {
                 server_rate: rateBonus,
                 vip_total: vipBonus,
                 pet_bonus: petBonus,
-                pk_bonus: pkBonus,
                 member_bonus: memberBonus,
                 bio_reputation: bioBonus,
-                cheffenia_reputation: chefBonus,
-                dominio_reputation: dominioBonus,
-                domain_collect: domainBonus,
-                sealed_bonus: sealedBonus,
+                cheff_bonus: cheffBonus,
                 temp_bonus: tempBonus,
                 profs: 0
             },
             final_mods: {
-                pet_equip_final: accBonus,
-                pet_equip_pingente_final: accBonusP,
-                quest_final: questBonus,
-                adv_mastery_percent: ADV_MASTER_MAP[advMastery] || 0,
-                birth_mastery_percent: BIRTH_MASTER_MAP[birthMastery] || 0,
-                reborn_mastery_percent: REBORN_KAFRA_MAP[rebornMastery] || 0,
-                cas_rep_final: casBonus,
-                guild_final: guildBonus,
-                categ_final: categBonus,
-                trial_final: trialBonus,
-                runas_final: runasBonus,
-                runas_black_final: runasblackBonus,
-                rebornC_final: rebornCBonus,
             },
             consumables: Object.keys(consumables).filter(k => consumables[k])
         };
@@ -353,23 +258,9 @@ function App() {
         const rateBonus = RATE_PRESETS[modifiers.ratePreset] || 0;
         const vipBonus = VIP_PRESETS[modifiers.vipPreset] || 0;
         const petBonus = PET_PRESETS[modifiers.petPreset] || 0;
-        const pkBonus = PK_PRESETS[modifiers.pkPreset] || 0;
-        const memberBonus = MEMBER_PRESETS[modifiers.memberPreset] || 0;
-        const accBonus = PET_ACCESSORY_PRESETS[modifiers.petAccessoryPreset] || 0;
-        const accBonusP = PET_ACCESSORYP_PRESETS[modifiers.petAccessoryPPreset] || 0;
-        const questBonus = FENDA_QUEST_PRESETS[modifiers.questPreset] || 0;
+        const memberBonus = Number(modifiers.memberPreset) || 0;
         const bioBonus = BIO_REPUTATION_PRESETS[modifiers.bioReputationPreset] || 0;
-        const chefBonus = BIO_REPUTATION_PRESETS[modifiers.cheffeniaReputationPreset] || 0;
-        const dominioBonus = DOMINIO_REPUTATION_PRESETS[modifiers.dominioReputationPreset] || 0;
-        const casBonus = CAS_REPUTATION_PRESETS[modifiers.casReputationPreset] || 0;
-        const domainBonus = DOMINIO_COLLECT_PRESETS[modifiers.domainCollectPreset] || 0;
-        const guildBonus = GUILD_RANKING_PRESETS[modifiers.guildRankingPreset] || 0;
-        const categBonus = CATEG_RANKING_PRESETS[modifiers.categRankingPreset] || 0;
-        const trialBonus = TRIAL_RANKING_PRESETS[modifiers.trialRankingPreset] || 0;
-        const runasBonus = RUNAS_PRESETS[modifiers.runasPreset] || 0;
-        const runasblackBonus = RUNAS_BLACK_PRESETS[modifiers.runasBlackFridayPreset] || 0;
-        const rebornCBonus = REBORNC_PRESETS[modifiers.rebornCPreset] || 0;
-        const sealedBonus = SEA_REPUTATION_PRESETS[modifiers.sealedReputationPreset] || 0;
+        const cheffBonus = CHEFF_PRESETS[modifiers.cheffPreset] || 0;
         const tempBonus = TEMP_PRESETS[modifiers.temporadaPreset] || 0;
 
         const payload = {
@@ -379,31 +270,14 @@ function App() {
                 server_rate: rateBonus,
                 vip_total: vipBonus,
                 pet_bonus: petBonus,
-                pk_bonus: pkBonus,
                 member_bonus: memberBonus,
                 bio_reputation: bioBonus,
-                cheffenia_reputation: chefBonus,
-                dominio_reputation: dominioBonus,
-                domain_collect: domainBonus,
-                sealed_bonus: sealedBonus,
+                cheff_bonus: cheffBonus,
                 temp_bonus: tempBonus,
                 profs: 0
             },
 
             final_mods: {
-                pet_equip_final: accBonus,
-                pet_equip_pingente_final: accBonusP,
-                quest_final: questBonus,
-                adv_mastery_percent: ADV_MASTER_MAP[advMastery] || 0,
-                birth_mastery_percent: BIRTH_MASTER_MAP[birthMastery] || 0,
-                reborn_mastery_percent: REBORN_KAFRA_MAP[rebornMastery] || 0,
-                cas_rep_final: casBonus,
-                guild_final: guildBonus,
-                categ_final: categBonus,
-                trial_final: trialBonus,
-                runas_final: runasBonus,
-                runas_black_final: runasblackBonus,
-                rebornC_final: rebornCBonus,
             },
             consumables: Object.keys(consumables).filter(k => consumables[k])
         };
@@ -448,7 +322,7 @@ function App() {
             setMonsterTableData(null);
             recalculateDrops();
         }
-    }, [selectedLevel, selectedContent, consumables, modifiers, advMastery, birthMastery, rebornMastery]);
+    }, [selectedLevel, selectedContent, consumables, modifiers]);
 
     function handleConsumableChange(key) {
         setConsumables(prev => {
@@ -490,7 +364,7 @@ function App() {
                             {connectionError}
                             <hr style={{ margin: "8px 0", borderColor: "rgba(239, 68, 68, 0.2)" }} />
                             <div style={{ fontSize: "11px", color: "#9ca3af" }}>
-                                {selectedContent === 'moedas' || selectedContent === 'monster_table' ?
+                                {selectedContent === 'moedas_cheffenia_bio5' || selectedContent === 'monster_table' ?
                                     "Este conteúdo requer o Backend Local rodando ou suporte no servidor remoto." :
                                     "Verifique se as variáveis de ambiente (VITE_) estão configuradas no Vercel."
                                 }
@@ -502,9 +376,9 @@ function App() {
         >
             <div className="card header-card">
                 <div className="header-info">
-                    <h2>History Drop Simulator</h2>
+                    <h2>Hero Drop Simulator</h2>
                     <h4>O último doador terá suas informações como padrão até o próximo valor superior ou 30 dias corridos: Envie discord junto a doação!</h4>
-                    <p>Último doador: KENAI~ || Valor: R$6,25 / 50k Rops dividido por 8000 || Data de vencimento: 13/03/2026 </p>
+                    <p>Último doador: Você? || Valor: R$0,01 / 0k Rops || Data de vencimento:  </p>
                 </div>
                 <div className="header-donation">
                     <DonationCard />
@@ -537,15 +411,15 @@ function App() {
                                 <span>Bônus Geral: {allDropsData.B_general_percent}% | Bônus Final: {allDropsData.B_final_percent}%</span>
                                 <span className="florzinha-metric-header">
                                     🌸 Florzinha: <strong>{florzinhaVal.toFixed(4)}%</strong>
+                                    {(selectedContent === 'villa_of_zenys' || selectedContent === 'caminho_iniciante' || selectedContent === 'labirinto_valquirias' || selectedContent === 'jardim_sagrado' || selectedContent === 'trilha_heroi' || selectedContent === 'campo_minerador' || selectedContent === 'legiao' || selectedContent === 'unknown_blue_hole' || selectedContent === 'ascensao_somatologica') && (
+                                        <button
+                                            className="btn-registrar"
+                                            onClick={() => handleRegisterFarm(selectedContent, selectedLevel, allDropsData.drops)}
+                                        >
+                                            + Registrar Farm
+                                        </button>
+                                    )}
                                 </span>
-                                {(selectedContent === 'villa_of_zenys' || selectedContent === 'fenda_maior' || selectedContent === 'fenda_dimensional' || selectedContent === 'trial' || selectedContent === 'glast_heim_extreme' || selectedContent === 'dominio') && (
-                                    <button
-                                        className="btn-registrar"
-                                        onClick={() => handleRegisterFarm(selectedContent, selectedLevel, allDropsData.drops)}
-                                    >
-                                        + Registrar Farm
-                                    </button>
-                                )}
                             </div>
                         </div>
                         <table style={{ width: "100%", borderCollapse: "collapse", marginTop: "10px" }}>
@@ -603,32 +477,14 @@ function App() {
                             <option value="1">Sim</option>
                         </select>
                     </label>
-                    <label>Reputação Bio 5 (Extreme):
+                    <label>Reputação Bio 5:
                         <select id="bioReputationPreset" value={modifiers.bioReputationPreset} onChange={handleModifierChange}>
                             {Object.keys(BIO_REPUTATION_PRESETS).map(k => <option key={k} value={k}>{k}</option>)}
                         </select>
                     </label>
-                    <label>Reputação Cheffênia (Extreme):
-                        <select id="cheffeniaReputationPreset" value={modifiers.cheffeniaReputationPreset} onChange={handleModifierChange}>
-                            {Object.keys(BIO_REPUTATION_PRESETS).map(k => <option key={k} value={k}>{k}</option>)}
-                        </select>
-                    </label>
-
-                    <label>Reputação Selada:
-                        <select id="sealedReputationPreset" value={modifiers.sealedReputationPreset} onChange={handleModifierChange}>
-                            {Object.keys(SEA_REPUTATION_PRESETS).map(k => <option key={k} value={k}>{k}</option>)}
-                        </select>
-                    </label>
-
-                    <label>Excelência Domínio:
-                        <select id="dominioReputationPreset" value={modifiers.dominioReputationPreset} onChange={handleModifierChange}>
-                            {Object.keys(DOMINIO_REPUTATION_PRESETS).map(k => <option key={k} value={k}>{k}</option>)}
-                        </select>
-                    </label>
-
-                    <label>Domínio Coleta (Mineração/Pesca/Herbologia):
-                        <select id="domainCollectPreset" value={modifiers.domainCollectPreset} onChange={handleModifierChange}>
-                            {Object.keys(DOMINIO_COLLECT_PRESETS).map(k => <option key={k} value={k}>{k}</option>)}
+                    <label>Reputação Cheffênia:
+                        <select id="cheffPreset" value={modifiers.cheffPreset} onChange={handleModifierChange}>
+                            {Object.keys(CHEFF_PRESETS).map(k => <option key={k} value={k}>{k}</option>)}
                         </select>
                     </label>
 
@@ -640,97 +496,6 @@ function App() {
 
                 </div>
 
-                <div className="card">
-                    <h3>Modificadores Finais</h3>
-
-                    <label>Pet Acessório (Refino):
-                        <select id="petAccessoryPreset" value={modifiers.petAccessoryPreset} onChange={handleModifierChange}>
-                            {Object.keys(PET_ACCESSORY_PRESETS).map(k => <option key={k} value={k}>{k}</option>)}
-                        </select>
-                    </label>
-
-                    <label>Pet Pingente (Refino):
-                        <select id="petAccessoryPPreset" value={modifiers.petAccessoryPPreset} onChange={handleModifierChange}>
-                            {Object.keys(PET_ACCESSORYP_PRESETS).map(k => <option key={k} value={k}>{k}</option>)}
-                        </select>
-                    </label>
-
-                    <label>Quest Fenda (Nível):
-                        <select id="questPreset" value={modifiers.questPreset} onChange={handleModifierChange}>
-                            {Object.keys(FENDA_QUEST_PRESETS).map(k => <option key={k} value={k}>{k}</option>)}
-                        </select>
-                    </label>
-
-                    <label>Reputação Casamento:
-                        <select id="casReputationPreset" value={modifiers.casReputationPreset} onChange={handleModifierChange}>
-                            {Object.keys(CAS_REPUTATION_PRESETS).map(k => <option key={k} value={k}>{k}</option>)}
-                        </select>
-                    </label>
-
-                    <label>Guild Ranking (Posição):
-                        <select id="guildRankingPreset" value={modifiers.guildRankingPreset} onChange={handleModifierChange}>
-                            {Object.keys(GUILD_RANKING_PRESETS).map(k => <option key={k} value={k}>{k}</option>)}
-                        </select>
-                    </label>
-                    <label>Ranking Categoria (Posição):
-                        <select id="categRankingPreset" value={modifiers.categRankingPreset} onChange={handleModifierChange}>
-                            {Object.keys(CATEG_RANKING_PRESETS).map(k => <option key={k} value={k}>{k}</option>)}
-                        </select>
-                    </label>
-                    <label>Trial Ranking (Posição):
-                        <select id="trialRankingPreset" value={modifiers.trialRankingPreset} onChange={handleModifierChange}>
-                            {Object.keys(TRIAL_RANKING_PRESETS).map(k => <option key={k} value={k}>{k}</option>)}
-                        </select>
-                    </label>
-                    <label>Runas GvG:
-                        <select id="runasPreset" value={modifiers.runasPreset} onChange={handleModifierChange}>
-                            {Object.keys(RUNAS_PRESETS).map(k => <option key={k} value={k}>{k}</option>)}
-                        </select>
-                    </label>
-
-                    <label>Runas Black Friday:
-                        <select id="runasBlackFridayPreset" value={modifiers.runasBlackFridayPreset} onChange={handleModifierChange}>
-                            {Object.keys(RUNAS_BLACK_PRESETS).map(k => <option key={k} value={k}>{k}</option>)}
-                        </select>
-                    </label>
-
-                    <label>Reborn Charge:
-                        <select id="rebornCPreset" value={modifiers.rebornCPreset} onChange={handleModifierChange}>
-                            {Object.keys(REBORNC_PRESETS).map(k => <option key={k} value={k}>{k}</option>)}
-                        </select>
-                    </label>
-
-                    <label>Maestria Aventureiro
-                        <select value={advMastery} onChange={e => setAdvMastery(e.target.value)}>
-                            <option value="none">Nenhum</option>
-                            <option value="adv_1">Nível 1 (+1%)</option>
-                            <option value="adv_2">Nível 2 (+3%)</option>
-                            <option value="adv_3">Nível 3 (+5%)</option>
-                            <option value="adv_4">Nível 4 (+8%)</option>
-                        </select>
-                    </label>
-
-                    <label>Maestria Aniversário
-                        <select value={birthMastery} onChange={e => setBirthMastery(e.target.value)}>
-                            <option value="none">Nenhum</option>
-                            <option value="birth_1">Nível 1 (+1%)</option>
-                            <option value="birth_2">Nível 2 (+2%)</option>
-                            <option value="birth_3">Nível 3 (+3%)</option>
-                            <option value="birth_4">Nível 4 (+5%)</option>
-                        </select>
-                    </label>
-
-                    <label>Maestria Reborn Kafra
-                        <select value={rebornMastery} onChange={e => setRebornMastery(e.target.value)}>
-                            <option value="none">Nenhum</option>
-                            <option value="reborn_1">Nível 1 (+1%)</option>
-                            <option value="reborn_2">Nível 2 (+2%)</option>
-                            <option value="reborn_3">Nível 3 (+3%)</option>
-                            <option value="reborn_4">Nível 4 (+5%)</option>
-                            <option value="reborn_5">Nível 5 (+8%)</option>
-                        </select>
-                    </label>
-                </div>
             </div>
 
             <div className="card consumables-section">

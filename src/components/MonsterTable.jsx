@@ -21,7 +21,7 @@ export default function MonsterTable({ data, contentId, levelId, onRegisterFarm,
                     <span className="florzinha-metric-header">
                         🌸 Florzinha: <strong>{florzinhaVal.toFixed(4)}%</strong>
                     </span>
-                    {(contentId === 'moedas' || contentId === 'villa_of_zenys' || contentId === 'fenda_maior' || contentId === 'trial' || contentId === 'glast_heim_extreme' || contentId === 'dominio') && (levelId === '1' || levelId === '2' || contentId === 'fenda_maior' || contentId === 'trial' || contentId === 'glast_heim_extreme' || contentId === 'dominio') && (
+                    {(contentId === 'moedas_cheffenia_bio5' || contentId === 'villa_of_zenys' || contentId === 'trilha_heroi' || contentId === 'caminho_iniciante' || contentId === 'jardim_sagrado' || contentId === 'legiao' || contentId === 'campo_minerador') && (
                         <button className="btn-registrar" onClick={() => onRegisterFarm(contentId, levelId, data.drops)}>
                             + Registrar Farm
                         </button>

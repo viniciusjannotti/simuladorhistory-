@@ -6,25 +6,25 @@ const getContentIcon = (content) => {
     const id = content.content_id.toLowerCase();
 
     // Map content to icon images
-    if (name.includes('moedas') || name.includes('selada')) {
+    if (name.includes('moedas') || name.includes('cheffenia') || name.includes('bio 5') || name.includes('cheffênia')) {
         return '/icons/moedas_selada.png';
     }
     if (name.includes('villa') || name.includes('zeny')) {
         return '/icons/villa_zenys.png';
     }
-    if (name.includes('fenda maior')) {
+    if (name.includes('caminho') || name.includes('iniciante')) {
         return '/icons/fenda_maior.png';
     }
-    if (name.includes('dimensional') || name.includes('fenda dimensional')) {
+    if (name.includes('labirinto') || name.includes('valquirias')) {
         return '/icons/fenda_dimensional.png';
     }
-    if (name.includes('trial')) {
+    if (name.includes('jardim') || name.includes('sagrado')) {
         return '/icons/trial.png';
     }
-    if (name.includes('glast') || name.includes('extreme')) {
+    if (name.includes('trilha') || name.includes('heroi')) {
         return '/icons/glast_heim.png';
     }
-    if (name.includes('dominio') || id.includes('dominio')) {
+    if (name.includes('campo') || name.includes('minerador') || id.includes('minerador')) {
         return '/icons/dominio.png';
     }
 

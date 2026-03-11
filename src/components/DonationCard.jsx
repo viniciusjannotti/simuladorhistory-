@@ -17,8 +17,8 @@ export default function DonationCard() {
                 <div className="rops-section">
                     <div className="rops-title">Ou via ROPS:</div>
                     <div className="rops-info">
-                        <span className="rops-char">🎮 Aprimonk</span>
-                        <span className="rops-char">⚔️ 275 Shura</span>
+                        <span className="rops-char">🎮 Peti</span>
+                        <span className="rops-char">⚔️ Shura</span>
                     </div>
                 </div>
             </div>
